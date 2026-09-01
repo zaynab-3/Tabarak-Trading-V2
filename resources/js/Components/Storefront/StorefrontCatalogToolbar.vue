@@ -18,6 +18,7 @@ const selectedCategory = computed(() => props.categories.find(
 
 const selectCategory = (categoryId: number | '') => {
     props.filters.category = categoryId;
+    props.filters.brand = '';
     emit('apply');
 };
 </script>
@@ -55,7 +56,7 @@ const selectCategory = (categoryId: number | '') => {
                 <label class="block">
                     <span class="sr-only">Filter by brand</span>
                     <select v-model="filters.brand" class="min-h-10 w-full rounded-md border-tabarak-line bg-white py-2 text-sm text-tabarak-ink focus:border-tabarak-blue focus:ring-tabarak-blue" aria-label="Filter by brand" @change="emit('apply')">
-                        <option value="">All brands</option>
+                        <option value="">{{ filters.category ? 'All brands in category' : 'All brands' }}</option>
                         <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}</option>
                     </select>
                 </label>

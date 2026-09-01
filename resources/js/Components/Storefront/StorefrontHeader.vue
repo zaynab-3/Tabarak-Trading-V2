@@ -1,34 +1,15 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Menu, X } from '@lucide/vue';
-import { ref } from 'vue';
 import BrandMark from '@/Components/Shared/BrandMark.vue';
 import SearchBar from '@/Components/Storefront/SearchBar.vue';
-
-const open = ref(false);
-const links = [
-    { label: 'Shop', routeName: 'shop' },
-    { label: 'Admin login', routeName: 'admin.login' },
-];
 </script>
 
 <template>
-    <header class="sticky top-0 z-40 border-b border-oat-200 bg-white/95 backdrop-blur">
-        <div class="border-b border-oat-200 bg-forest-800 py-2 text-center text-[11px] font-bold uppercase tracking-[0.16em] text-forest-50">
-            Wholesale catalogue · Lebanon
+    <header class="sticky top-0 z-50 bg-tabarak-blue text-white shadow-[0_1px_0_rgba(255,255,255,0.18)]">
+        <div class="page-shell flex min-h-20 flex-wrap items-center gap-4 py-3 md:flex-nowrap md:gap-6 md:py-0">
+            <Link :href="route('shop')" aria-label="Tabarak Trading shop" class="shrink-0"><BrandMark inverse /></Link>
+            <div class="order-3 w-full md:order-none md:mx-auto md:max-w-2xl"><SearchBar /></div>
+            <Link :href="route('shop')" class="relative ml-auto inline-flex min-h-11 items-center px-3 text-sm font-bold text-white after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-tabarak-orange">Shop</Link>
         </div>
-        <div class="page-shell flex min-h-20 items-center gap-5">
-            <Link :href="route('shop')" aria-label="Tabarak Trading shop"><BrandMark /></Link>
-            <nav class="ml-auto hidden items-center gap-1 md:flex" aria-label="Primary navigation">
-                <Link v-for="link in links" :key="link.routeName" :href="route(link.routeName)" class="rounded-md px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-oat-100 hover:text-forest-900" :class="route().current(link.routeName) ? 'bg-oat-100 text-forest-900' : ''">{{ link.label }}</Link>
-            </nav>
-            <button class="ml-auto grid size-11 place-items-center rounded-md border border-oat-300 text-forest-900 md:hidden" type="button" :aria-expanded="open" aria-label="Toggle navigation" @click="open = !open">
-                <X v-if="open" class="size-5" /><Menu v-else class="size-5" />
-            </button>
-        </div>
-        <div class="page-shell pb-4 md:hidden"><SearchBar /></div>
-        <nav v-if="open" class="page-shell grid gap-1 border-t border-oat-200 py-3 md:hidden" aria-label="Mobile navigation">
-            <Link v-for="link in links" :key="link.routeName" :href="route(link.routeName)" class="rounded-md px-3 py-3 text-sm font-semibold text-slate-700" @click="open = false">{{ link.label }}</Link>
-        </nav>
     </header>
 </template>

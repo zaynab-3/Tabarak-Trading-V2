@@ -4,7 +4,7 @@ import StorefrontHeader from '@/Components/Storefront/StorefrontHeader.vue';
 </script>
 
 <template>
-    <div class="min-h-screen bg-oat-50">
+    <div class="storefront-shell">
         <StorefrontHeader />
         <main><slot /></main>
         <StorefrontFooter />

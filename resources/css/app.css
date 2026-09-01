@@ -20,6 +20,8 @@
     .field-label { @apply mb-1.5 block text-sm font-semibold text-slate-700; }
     .field-input { @apply block min-h-11 w-full rounded-md border-oat-300 bg-white text-sm text-slate-900 shadow-none placeholder:text-slate-400 focus:border-forest-600 focus:ring-forest-600; }
     .eyebrow { @apply text-xs font-bold uppercase tracking-[0.2em] text-saffron-600; }
+    .storefront-shell { @apply min-h-screen bg-white text-tabarak-ink; }
+    .storefront-shell :focus-visible { @apply ring-tabarak-blue; }
 }
 
 @media (prefers-reduced-motion: reduce) {

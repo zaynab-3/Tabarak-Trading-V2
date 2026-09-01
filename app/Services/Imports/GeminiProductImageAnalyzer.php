@@ -6,7 +6,9 @@ use App\DTOs\ProductImageAnalysisResult;
 use App\Models\Media;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use JsonException;
 use RuntimeException;
 
@@ -50,16 +52,21 @@ class GeminiProductImageAnalyzer implements ProductImageAnalyzerInterface
                 ]],
                 'generationConfig' => [
                     'temperature' => 0.1,
-                    'responseFormat' => [
-                        'text' => [
-                            'mimeType' => 'application/json',
-                            'schema' => $this->definition->schema(),
-                        ],
-                    ],
+                    'responseMimeType' => 'application/json',
+                    'responseJsonSchema' => $this->definition->schema(),
                 ],
             ]);
 
         if ($response->failed()) {
+            Log::warning('Gemini image analysis request rejected', [
+                'status' => $response->status(),
+                'provider_code' => $response->json('error.status'),
+                'provider_message' => Str::limit(
+                    strip_tags((string) $response->json('error.message', 'No provider message returned.')),
+                    500,
+                ),
+            ]);
+
             throw new RuntimeException('The Gemini image analysis request failed.');
         }
 

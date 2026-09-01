@@ -133,7 +133,7 @@ Automatic analysis needs a Gemini API key. Create a free-tier key in [Google AI 
 ```dotenv
 PRODUCT_IMAGE_ANALYZER=gemini
 GEMINI_API_KEY=your_server_side_api_key
-GEMINI_VISION_MODEL=gemini-2.5-flash-lite
+GEMINI_VISION_MODEL=gemini-3.5-flash-lite
 ```
 
 Then reload configuration and restart long-running queue workers:

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Imports\GeminiProductImageAnalyzer;
 use App\Services\Imports\OpenAiProductImageAnalyzer;
 use App\Services\Imports\PlaceholderProductImageAnalyzer;
 use App\Services\Imports\ProductImageAnalyzerInterface;
@@ -17,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(ProductImageAnalyzerInterface::class, function ($app) {
             return match (config('imports.analyzer')) {
+                'gemini' => $app->make(GeminiProductImageAnalyzer::class),
                 'openai' => $app->make(OpenAiProductImageAnalyzer::class),
                 default => $app->make(PlaceholderProductImageAnalyzer::class),
             };

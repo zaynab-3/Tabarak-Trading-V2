@@ -59,7 +59,21 @@ class ImportBatchController extends Controller
     private function importConfig(): array
     {
         $driver = (string) config('imports.analyzer');
-        $enabled = $driver === 'openai' && filled(config('imports.openai.api_key'));
+        $enabled = match ($driver) {
+            'gemini' => filled(config('imports.gemini.api_key')),
+            'openai' => filled(config('imports.openai.api_key')),
+            default => false,
+        };
+        $provider = match ($driver) {
+            'gemini' => 'Google Gemini',
+            'openai' => 'OpenAI',
+            default => 'Manual review',
+        };
+        $model = match ($driver) {
+            'gemini' => (string) config('imports.gemini.model'),
+            'openai' => (string) config('imports.openai.model'),
+            default => null,
+        };
 
         return [
             'upload_chunk_size' => (int) config('imports.upload_chunk_size'),
@@ -67,8 +81,8 @@ class ImportBatchController extends Controller
             'analyzer' => [
                 'driver' => $driver,
                 'enabled' => $enabled,
-                'provider' => $enabled ? 'OpenAI' : 'Manual review',
-                'model' => $enabled ? (string) config('imports.openai.model') : null,
+                'provider' => $provider,
+                'model' => $enabled ? $model : null,
             ],
         ];
     }

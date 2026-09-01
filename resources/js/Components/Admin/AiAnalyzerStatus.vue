@@ -14,14 +14,14 @@ defineProps<{ analyzer: ProductImageAnalyzerStatus }>();
         <BotOff v-else class="mt-0.5 size-5 shrink-0" />
         <div>
             <p class="font-bold">
-                {{ analyzer.enabled ? `${analyzer.provider} image analysis is active` : 'AI image analysis needs an API key' }}
+                {{ analyzer.enabled ? `${analyzer.provider} image analysis is active` : `${analyzer.provider} needs an API key` }}
             </p>
             <p class="mt-1 leading-6">
                 <template v-if="analyzer.enabled">
                     {{ analyzer.model }} analyzes every uploaded image in the queue. Suggestions remain drafts until an admin approves them.
                 </template>
                 <template v-else>
-                    Uploads still create review items, but automatic names stay disabled until OpenAI is enabled in the local <code>.env</code> file.
+                    Uploads still create review items, but automatic names stay disabled until the key is added to the local <code>.env</code> file.
                 </template>
             </p>
         </div>

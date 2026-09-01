@@ -27,7 +27,8 @@ const {
 
         <MediaUploader
             multiple
-            :help="`JPG, PNG or WebP · ${config.max_image_size_mb} MB each · large selections upload in groups of ${config.upload_chunk_size}`"
+            accept="image/jpeg,image/png,image/webp,image/svg+xml,.svg"
+            :help="`JPG, PNG, WebP or SVG · ${config.max_image_size_mb} MB each · SVG is safely converted to PNG`"
             @change="setFiles"
         />
 
@@ -39,7 +40,7 @@ const {
             <div class="h-2 overflow-hidden rounded-full bg-oat-200">
                 <div class="h-full rounded-full bg-saffron-500 transition-all" :style="{ width: `${progress}%` }" />
             </div>
-            <p class="mt-2 text-xs text-slate-500">AI analysis starts in the queue while the remaining image groups upload.</p>
+            <p class="mt-2 text-xs text-slate-500">SVG files are converted to PNG in your browser. AI analysis starts while the remaining groups upload.</p>
         </div>
 
         <p v-if="error" class="mt-3 border-l-2 border-red-500 pl-3 text-sm text-red-700">

@@ -2,7 +2,7 @@
 
 Tabarak Trading V2 is a fresh wholesale food catalogue and administration platform. It provides a public product catalogue, protected administration, reusable media handling, and a human-reviewed AI-assisted bulk image import workflow.
 
-This repository is independent from every previous Tabarak Trading codebase. It does not include checkout, payments, customer accounts, live inventory, or deployment configuration. OpenAI image analysis is optional and disabled until a server-side API key is configured.
+This repository is independent from every previous Tabarak Trading codebase. It does not include checkout, payments, customer accounts, live inventory, or deployment configuration. Gemini image analysis is optional and disabled until a server-side API key is configured.
 
 ## Stack
 
@@ -95,7 +95,7 @@ Backend responsibilities are split into small, focused layers:
 - `app/Models` defines normalized relationships and explicit mass-assignment fields.
 - `app/Policies` denies mutations unless the authenticated user is an administrator.
 - `app/Services/Products` owns reusable query, presentation, and slug behavior.
-- `app/Services/Imports` defines `ProductImageAnalyzerInterface`, the manual placeholder, and the swappable OpenAI implementation.
+- `app/Services/Imports` defines `ProductImageAnalyzerInterface`, the manual placeholder, the default Gemini implementation, and an optional OpenAI implementation.
 - `app/Jobs/AnalyzeImportItem.php` analyzes each image independently without blocking the upload request.
 
 Frontend responsibilities are similarly separated:
@@ -126,14 +126,14 @@ Media records are reusable across products, category imagery, brand logos, and i
 
 Open **Admin → Bulk Import**, choose any practical number of images in one selection, and submit the batch. The browser uploads large selections in configurable groups instead of placing every file in one HTTP request. Each validated image becomes a reusable media record and import item, and an independent `AnalyzeImportItem` queue job starts immediately. The review page polls for results and reveals names and package details as jobs finish.
 
-Each image must be JPG, PNG, or WebP and is limited to 8 MB by default. Change `IMPORT_UPLOAD_CHUNK_SIZE` or `IMPORT_IMAGE_MAX_SIZE_KB` when the server environment needs different limits.
+Each selected image may be JPG, PNG, WebP, or SVG and is limited to 8 MB by default. SVG files are sanitized and rasterized to PNG in the administrator's browser before upload so executable SVG markup is never stored or sent to the analyzer. Change `IMPORT_UPLOAD_CHUNK_SIZE` or `IMPORT_IMAGE_MAX_SIZE_KB` when the server environment needs different limits.
 
-Automatic analysis is disabled by default. Create an OpenAI API key in the OpenAI API dashboard and place it only in the local `.env` file:
+Automatic analysis needs a Gemini API key. Create a free-tier key in [Google AI Studio](https://aistudio.google.com/apikey) and place it only in the local `.env` file:
 
 ```dotenv
-PRODUCT_IMAGE_ANALYZER=openai
-OPENAI_API_KEY=your_server_side_api_key
-OPENAI_VISION_MODEL=gpt-4o-mini
+PRODUCT_IMAGE_ANALYZER=gemini
+GEMINI_API_KEY=your_server_side_api_key
+GEMINI_VISION_MODEL=gemini-2.5-flash-lite
 ```
 
 Then reload configuration and restart long-running queue workers:

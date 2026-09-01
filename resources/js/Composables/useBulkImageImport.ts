@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { computed, ref } from 'vue';
+import { isSvgFile, svgToPng } from '@/Utils/svgToPng';
 
 interface CreateBatchResponse {
     batch_id: number;
@@ -31,12 +32,12 @@ export function useBulkImageImport(chunkSize: number, maxImageSizeMb: number) {
     const setFiles = (selection: File[]) => {
         error.value = null;
         const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
-        const invalidType = selection.find((file) => !allowedTypes.has(file.type));
+        const invalidType = selection.find((file) => !allowedTypes.has(file.type) && !isSvgFile(file));
         const tooLarge = selection.find((file) => file.size > maxImageSizeMb * 1024 * 1024);
 
         if (invalidType) {
             files.value = [];
-            error.value = `${invalidType.name} is not a JPG, PNG, or WebP image.`;
+            error.value = `${invalidType.name} is not a JPG, PNG, WebP, or SVG image.`;
 
             return;
         }
@@ -71,8 +72,18 @@ export function useBulkImageImport(chunkSize: number, maxImageSizeMb: number) {
             batchUrl.value = showUrl;
 
             for (let index = 0; index < files.value.length; index += chunkSize) {
-                const chunk = files.value.slice(index, index + chunkSize);
+                const chunk = await Promise.all(
+                    files.value
+                        .slice(index, index + chunkSize)
+                        .map((file) => isSvgFile(file) ? svgToPng(file) : file),
+                );
                 const body = new FormData();
+
+                const convertedTooLarge = chunk.find((file) => file.size > maxImageSizeMb * 1024 * 1024);
+
+                if (convertedTooLarge) {
+                    throw new Error(`${convertedTooLarge.name} is larger than ${maxImageSizeMb} MB after SVG conversion.`);
+                }
 
                 chunk.forEach((file) => body.append('images[]', file));
                 await axios.post(uploadUrl, body, { headers: { Accept: 'application/json' } });
@@ -107,6 +118,10 @@ function errorMessage(caught: unknown): string {
             : null;
 
         return firstValidationMessage || payload?.message || 'The upload could not be completed.';
+    }
+
+    if (caught instanceof Error && caught.message) {
+        return caught.message;
     }
 
     return 'The upload could not be completed.';

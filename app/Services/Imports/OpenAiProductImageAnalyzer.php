@@ -12,6 +12,8 @@ use RuntimeException;
 
 class OpenAiProductImageAnalyzer implements ProductImageAnalyzerInterface
 {
+    public function __construct(private readonly ProductImageAnalysisDefinition $definition) {}
+
     public function analyze(Media $image): ProductImageAnalysisResult
     {
         $apiKey = trim((string) config('imports.openai.api_key'));
@@ -40,24 +42,12 @@ class OpenAiProductImageAnalyzer implements ProductImageAnalyzerInterface
 
         $analysis = $this->decodeAnalysis($response);
 
-        return new ProductImageAnalysisResult(
-            name: $this->nullableString($analysis['name'] ?? null),
-            brand: $this->nullableString($analysis['brand'] ?? null),
-            category: $this->nullableString($analysis['category'] ?? null),
-            weight: $this->nullableString($analysis['weight'] ?? null),
-            metadata: is_array($analysis['metadata'] ?? null) ? $analysis['metadata'] : [],
-            confidence: is_numeric($analysis['confidence'] ?? null) ? (float) $analysis['confidence'] : null,
-            warnings: array_values(array_filter(
-                is_array($analysis['warnings'] ?? null) ? $analysis['warnings'] : [],
-                fn (mixed $warning) => is_string($warning) && trim($warning) !== '',
-            )),
-            providerMetadata: [
+        return $this->definition->result($analysis, [
                 'provider' => 'openai',
                 'model' => $response->json('model'),
                 'response_id' => $response->json('id'),
                 'usage' => $response->json('usage'),
-            ],
-        );
+        ]);
     }
 
     /** @return array<string, mixed> */
@@ -71,13 +61,7 @@ class OpenAiProductImageAnalyzer implements ProductImageAnalyzerInterface
                 'content' => [
                     [
                         'type' => 'input_text',
-                        'text' => implode(' ', [
-                            'Analyze this single wholesale food product image.',
-                            'Read the visible package label carefully and identify the exact product name.',
-                            'Also extract brand, category, net weight, visible SKU/barcode text, flavor, packaging, pack quantity, and useful label text.',
-                            'Use null when a value is not visible or uncertain; do not invent details.',
-                            'The result is only an admin draft and will be reviewed by a human.',
-                        ]),
+                        'text' => $this->definition->prompt(),
                     ],
                     [
                         'type' => 'input_image',
@@ -95,50 +79,9 @@ class OpenAiProductImageAnalyzer implements ProductImageAnalyzerInterface
                     'type' => 'json_schema',
                     'name' => 'product_image_analysis',
                     'strict' => true,
-                    'schema' => $this->schema(),
+                    'schema' => $this->definition->schema(),
                 ],
             ],
-        ];
-    }
-
-    /** @return array<string, mixed> */
-    private function schema(): array
-    {
-        $nullableString = ['type' => ['string', 'null']];
-
-        return [
-            'type' => 'object',
-            'properties' => [
-                'name' => $nullableString,
-                'brand' => $nullableString,
-                'category' => $nullableString,
-                'weight' => $nullableString,
-                'metadata' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'detected_text' => $nullableString,
-                        'sku' => $nullableString,
-                        'barcode' => $nullableString,
-                        'flavor' => $nullableString,
-                        'packaging' => $nullableString,
-                        'pack_quantity' => $nullableString,
-                        'description' => $nullableString,
-                    ],
-                    'required' => ['detected_text', 'sku', 'barcode', 'flavor', 'packaging', 'pack_quantity', 'description'],
-                    'additionalProperties' => false,
-                ],
-                'confidence' => [
-                    'type' => ['number', 'null'],
-                    'minimum' => 0,
-                    'maximum' => 1,
-                ],
-                'warnings' => [
-                    'type' => 'array',
-                    'items' => ['type' => 'string'],
-                ],
-            ],
-            'required' => ['name', 'brand', 'category', 'weight', 'metadata', 'confidence', 'warnings'],
-            'additionalProperties' => false,
         ];
     }
 
@@ -167,12 +110,4 @@ class OpenAiProductImageAnalyzer implements ProductImageAnalyzerInterface
         return $analysis;
     }
 
-    private function nullableString(mixed $value): ?string
-    {
-        if (! is_string($value) || trim($value) === '') {
-            return null;
-        }
-
-        return trim($value);
-    }
 }

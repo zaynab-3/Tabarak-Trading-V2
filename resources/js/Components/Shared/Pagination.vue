@@ -11,7 +11,7 @@ defineProps<{ links: PaginationLink[]; storefront?: boolean }>();
             <Link
                 v-if="link.url"
                 :href="link.url"
-                preserve-scroll
+                :preserve-scroll="!storefront"
                 class="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border px-3 text-sm font-semibold transition"
                 :class="storefront
                     ? (link.active ? 'border-tabarak-blue bg-tabarak-blue text-white' : 'border-tabarak-line bg-white text-slate-700 hover:border-tabarak-orange hover:text-tabarak-orange')

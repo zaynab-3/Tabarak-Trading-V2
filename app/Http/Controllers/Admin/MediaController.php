@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Media\DeleteMedia;
 use App\Actions\Media\StoreMedia;
+use App\Actions\Media\UpdateMediaMetadata;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Media\StoreMediaRequest;
-use App\Models\Brand;
-use App\Models\Category;
+use App\Http\Requests\Media\UpdateMediaRequest;
 use App\Models\Media;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,7 +21,11 @@ class MediaController extends Controller
         Gate::authorize('viewAny', Media::class);
 
         return Inertia::render('Admin/Media/Index', [
-            'media' => Media::query()->withCount(['productImages', 'importItems'])->latest()->paginate(24),
+            'media' => Media::query()
+                ->withCount(['productImages', 'importItems', 'categoryImages', 'brandLogos'])
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->paginate(24),
         ]);
     }
 
@@ -35,17 +39,19 @@ class MediaController extends Controller
         return back()->with('success', 'Images added to the media library.');
     }
 
-    public function destroy(Media $medium): RedirectResponse
+    public function update(UpdateMediaRequest $request, Media $medium, UpdateMediaMetadata $action): RedirectResponse
+    {
+        Gate::authorize('update', $medium);
+        $action->handle($medium, $request->validated());
+
+        return back()->with('success', 'Image details updated.');
+    }
+
+    public function destroy(Media $medium, DeleteMedia $action): RedirectResponse
     {
         Gate::authorize('delete', $medium);
-        $inUse = $medium->productImages()->exists()
-            || $medium->importItems()->exists()
-            || Category::query()->where('image_id', $medium->id)->exists()
-            || Brand::query()->where('logo_image_id', $medium->id)->exists();
-        abort_if($inUse, 422, 'This image is currently in use.');
-        Storage::disk($medium->disk)->delete($medium->path);
-        $medium->delete();
+        $action->handle($medium);
 
-        return back()->with('success', 'Image deleted.');
+        return back()->with('success', 'Image and its catalogue links were deleted.');
     }
 }

@@ -7,8 +7,11 @@ export interface MediaItem {
     original_name?: string;
     mime_type?: string;
     size?: number;
+    sort_order?: number;
     product_images_count?: number;
     import_items_count?: number;
+    category_images_count?: number;
+    brand_logos_count?: number;
 }
 
 export interface TaxonomyRef {

@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ImportBatchImageController;
 use App\Http\Controllers\Admin\ImportBatchPublicationController;
 use App\Http\Controllers\Admin\ImportItemPublicationController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\MediaOrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductImageController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -37,7 +38,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('brands', BrandController::class)->only(['index', 'store', 'update']);
         Route::patch('/brands/{brand}/toggle', [BrandController::class, 'toggle'])->name('brands.toggle');
 
-        Route::resource('media', MediaController::class)->only(['index', 'store', 'destroy']);
+        Route::put('/media/order', [MediaOrderController::class, 'update'])->name('media.order.update');
+        Route::resource('media', MediaController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('imports', ImportBatchController::class)->parameters(['imports' => 'importBatch'])->only(['index', 'store', 'show']);
         Route::post('/imports/{importBatch}/images', [ImportBatchImageController::class, 'store'])->name('imports.images.store');
         Route::post('/imports/{importBatch}/analysis', [ImportBatchAnalysisController::class, 'store'])->name('imports.analysis.store');

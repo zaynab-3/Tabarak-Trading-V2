@@ -40,6 +40,7 @@ class StoreMedia
             'height' => $dimensions[1],
             'alt_text' => $altText,
             'checksum' => $checksum,
+            'sort_order' => ((int) Media::query()->max('sort_order')) + 1,
         ]);
     }
 }

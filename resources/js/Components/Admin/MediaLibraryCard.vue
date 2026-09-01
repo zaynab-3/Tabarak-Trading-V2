@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft, ArrowRight, GripVertical, Pencil, Trash2 } from '@lucide/vue';
+import { computed } from 'vue';
 import type { MediaItem } from '@/types/catalogue';
 import { humanFileSize } from '@/Utils/format';
 
@@ -16,6 +17,11 @@ const usageCount = () => (props.item.product_images_count ?? 0)
     + (props.item.import_items_count ?? 0)
     + (props.item.category_images_count ?? 0)
     + (props.item.brand_logos_count ?? 0);
+const savings = computed(() => {
+    if (!props.item.original_size || !props.item.size || props.item.original_size <= props.item.size) return null;
+
+    return Math.round((1 - props.item.size / props.item.original_size) * 100);
+});
 </script>
 
 <template>
@@ -34,7 +40,7 @@ const usageCount = () => (props.item.product_images_count ?? 0)
         <div class="p-3">
             <p class="truncate text-xs font-bold text-tabarak-ink" :title="item.original_name">{{ item.original_name }}</p>
             <p class="mt-1 truncate text-[11px] text-slate-500" :title="item.alt_text || 'No alt text'">{{ item.alt_text || 'No alt text' }}</p>
-            <p class="mt-1 text-[11px] text-slate-400">{{ humanFileSize(item.size) }} · {{ usageCount() }} uses</p>
+            <p class="mt-1 text-[11px] text-slate-400">{{ humanFileSize(item.size) }}<span v-if="savings" class="font-bold text-emerald-700"> · {{ savings }}% smaller</span> · {{ usageCount() }} uses</p>
             <div class="mt-3 grid grid-cols-4 gap-1.5 border-t border-tabarak-line pt-3">
                 <button class="admin-table-action size-10 disabled:opacity-30" type="button" aria-label="Move image earlier" :disabled="index === 0" @click="$emit('move', index, -1)"><ArrowLeft class="size-4" /></button>
                 <button class="admin-table-action size-10 disabled:opacity-30" type="button" aria-label="Move image later" :disabled="index === total - 1" @click="$emit('move', index, 1)"><ArrowRight class="size-4" /></button>

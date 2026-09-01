@@ -7,6 +7,8 @@ export interface MediaItem {
     original_name?: string;
     mime_type?: string;
     size?: number;
+    original_size?: number | null;
+    optimized_at?: string | null;
     sort_order?: number;
     product_images_count?: number;
     import_items_count?: number;

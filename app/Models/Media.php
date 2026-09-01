@@ -15,14 +15,14 @@ class Media extends Model
 
     protected $fillable = [
         'disk', 'path', 'original_name', 'mime_type', 'extension', 'size',
-        'width', 'height', 'alt_text', 'checksum', 'sort_order',
+        'width', 'height', 'alt_text', 'checksum', 'original_size', 'optimized_at', 'sort_order',
     ];
 
     protected $appends = ['url'];
 
     protected function casts(): array
     {
-        return ['sort_order' => 'integer'];
+        return ['sort_order' => 'integer', 'optimized_at' => 'datetime'];
     }
 
     public function productImages(): HasMany

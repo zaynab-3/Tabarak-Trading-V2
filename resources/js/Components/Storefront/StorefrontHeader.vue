@@ -2,10 +2,16 @@
 import { Link } from '@inertiajs/vue3';
 import BrandMark from '@/Components/Shared/BrandMark.vue';
 import SearchBar from '@/Components/Storefront/SearchBar.vue';
+import { useAutoHideStorefrontHeader } from '@/Composables/useAutoHideStorefrontHeader';
+
+const { headerVisible } = useAutoHideStorefrontHeader();
 </script>
 
 <template>
-    <header class="sticky top-0 z-50 bg-tabarak-blue text-white shadow-[0_1px_0_rgba(255,255,255,0.18)]">
+    <header
+        class="sticky top-0 z-50 bg-tabarak-blue text-white shadow-[0_1px_0_rgba(255,255,255,0.18)] transition-transform duration-200 ease-out will-change-transform"
+        :class="headerVisible ? 'translate-y-0' : '-translate-y-full'"
+    >
         <div class="page-shell flex min-h-16 flex-wrap items-center gap-3 py-2 md:flex-nowrap md:gap-5 md:py-0">
             <Link :href="route('shop')" aria-label="Tabarak Trading shop" class="shrink-0"><BrandMark inverse /></Link>
             <div class="order-3 w-full md:order-none md:mx-auto md:max-w-2xl"><SearchBar /></div>

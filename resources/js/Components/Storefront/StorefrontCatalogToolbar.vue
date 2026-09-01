@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RotateCcw } from '@lucide/vue';
 import { computed } from 'vue';
+import { storefrontHeaderVisible } from '@/Composables/useAutoHideStorefrontHeader';
 import type { ProductFilters } from '@/Composables/useProductFilters';
 import type { TaxonomyRef } from '@/types/catalogue';
 
@@ -24,7 +25,10 @@ const selectCategory = (categoryId: number | '') => {
 </script>
 
 <template>
-    <section class="sticky top-[7rem] z-40 border-b border-tabarak-line bg-white shadow-[0_8px_22px_rgba(64,88,225,0.08)] md:top-16">
+    <section
+        class="sticky z-40 border-b border-tabarak-line bg-white shadow-[0_8px_22px_rgba(64,88,225,0.08)] transition-[top] duration-200 ease-out"
+        :class="storefrontHeaderVisible ? 'top-[7rem] md:top-16' : 'top-0'"
+    >
         <nav class="page-shell flex min-h-12 items-center gap-1 overflow-x-auto border-b border-tabarak-line py-1" aria-label="Product categories">
             <button
                 class="min-h-10 min-w-max rounded-md px-3 text-[13px] font-bold transition"

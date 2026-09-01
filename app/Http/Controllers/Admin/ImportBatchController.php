@@ -7,6 +7,7 @@ use App\Enums\ImportItemStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Imports\StoreImportBatchRequest;
 use App\Models\ImportBatch;
+use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -52,6 +53,11 @@ class ImportBatchController extends Controller
 
         return Inertia::render('Admin/Imports/Show', [
             'batch' => $importBatch,
+            'categories' => Category::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['id', 'name']),
             'analyzer' => $this->importConfig()['analyzer'],
             'canReanalyze' => $this->importConfig()['analyzer']['enabled'] && $importBatch->items->contains(
                 fn ($item) => in_array($item->status, [ImportItemStatus::Review, ImportItemStatus::Failed], true)

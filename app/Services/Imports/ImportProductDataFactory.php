@@ -25,7 +25,9 @@ class ImportProductDataFactory
         return ProductData::fromArray([
             'name' => $overrides['name'] ?? $item->suggested_name,
             'brand_id' => $this->taxonomy->brandId($item->suggested_brand),
-            'category_id' => $this->taxonomy->categoryId($item->suggested_category),
+            'category_id' => array_key_exists('category_id', $overrides)
+                ? (filled($overrides['category_id']) ? (int) $overrides['category_id'] : null)
+                : $this->taxonomy->categoryId($item->suggested_category),
             'sku' => $sku,
             'short_description' => filled($metadata['description'] ?? null)
                 ? Str::limit(trim((string) $metadata['description']), 500, '')

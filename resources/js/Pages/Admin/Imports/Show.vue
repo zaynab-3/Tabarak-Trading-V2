@@ -9,10 +9,11 @@ import PublishImportBatchButton from '@/Components/Admin/PublishImportBatchButto
 import ReanalyzeImportBatchButton from '@/Components/Admin/ReanalyzeImportBatchButton.vue';
 import { useImportBatchPolling } from '@/Composables/useImportBatchPolling';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import type { ImportBatch, ProductImageAnalyzerStatus } from '@/types/catalogue';
+import type { ImportBatch, ProductImageAnalyzerStatus, TaxonomyRef } from '@/types/catalogue';
 
 const props = defineProps<{
     batch: ImportBatch;
+    categories: TaxonomyRef[];
     analyzer: ProductImageAnalyzerStatus;
     canReanalyze: boolean;
 }>();
@@ -53,7 +54,7 @@ useImportBatchPolling(
         </div>
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <ImportAnalysisCard v-for="item in batch.items" :key="item.id" :item="item" />
+            <ImportAnalysisCard v-for="item in batch.items" :key="item.id" :item="item" :categories="categories" />
         </div>
     </AdminLayout>
 </template>

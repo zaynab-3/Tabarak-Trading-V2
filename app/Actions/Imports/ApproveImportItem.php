@@ -34,9 +34,17 @@ class ApproveImportItem
         $product = DB::transaction(function () use ($item, $overrides): Product {
             $product = $this->createProduct->handle($this->productData->make($item, $overrides));
             $this->attachMedia->handle($product, $item->media);
+            $product->loadMissing('category:id,name');
+            $warnings = collect($item->warnings ?? [])
+                ->reject(fn (string $warning) => $product->category_id
+                    && str_contains($warning, 'could not be matched confidently to an existing category'))
+                ->values()
+                ->all();
             $item->update([
                 'status' => ImportItemStatus::Approved,
                 'approved_product_id' => $product->id,
+                'suggested_category' => $product->category?->name,
+                'warnings' => $warnings ?: null,
             ]);
 
             return $product;

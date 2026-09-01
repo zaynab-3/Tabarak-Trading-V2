@@ -3,12 +3,14 @@
 namespace App\Services\Imports;
 
 use App\Models\Brand;
-use App\Models\Category;
 use App\Services\Products\UniqueSlugGenerator;
 
 class ImportTaxonomyResolver
 {
-    public function __construct(private readonly UniqueSlugGenerator $slugs) {}
+    public function __construct(
+        private readonly UniqueSlugGenerator $slugs,
+        private readonly AvailableImportCategories $categories,
+    ) {}
 
     public function brandId(?string $name): ?int
     {
@@ -29,19 +31,6 @@ class ImportTaxonomyResolver
 
     public function categoryId(?string $name): ?int
     {
-        $name = trim((string) $name);
-
-        if ($name === '') {
-            return null;
-        }
-
-        $category = Category::query()->whereRaw('LOWER(name) = LOWER(?)', [$name])->first();
-
-        return ($category ?? Category::query()->create([
-            'name' => $name,
-            'slug' => $this->slugs->generate(Category::class, $name),
-            'sort_order' => ((int) Category::query()->max('sort_order')) + 1,
-            'is_active' => true,
-        ]))->id;
+        return $this->categories->match($name)?->id;
     }
 }

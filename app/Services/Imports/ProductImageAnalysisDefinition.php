@@ -6,12 +6,18 @@ use App\DTOs\ProductImageAnalysisResult;
 
 class ProductImageAnalysisDefinition
 {
+    public function __construct(private readonly AvailableImportCategories $categories) {}
+
     public function prompt(): string
     {
+        $availableCategories = $this->categories->all()->pluck('name')->values()->all();
+
         return implode(' ', [
             'Analyze this single wholesale food product image.',
             'Read the visible package label carefully and identify the exact product name.',
-            'Also extract brand, category, net weight, visible SKU/barcode text, flavor, packaging, pack quantity, and useful label text.',
+            'Also extract brand, net weight, visible SKU/barcode text, flavor, packaging, pack quantity, and useful label text.',
+            'For category, choose exactly one value from this existing category list: '.json_encode($availableCategories, JSON_UNESCAPED_UNICODE).'.',
+            'Never invent, rename, broaden, or create a category. Return category as null when no listed category is a confident match.',
             'Use null when a value is not visible or uncertain; do not invent details.',
             'The result is only an admin draft and will be reviewed by a human.',
         ]);
@@ -27,7 +33,7 @@ class ProductImageAnalysisDefinition
             'properties' => [
                 'name' => $nullableString + ['description' => 'Exact product name visible on the package.'],
                 'brand' => $nullableString + ['description' => 'Brand visible on the package.'],
-                'category' => $nullableString + ['description' => 'Concise wholesale food category.'],
+                'category' => $nullableString + ['description' => 'Exact category name from the supplied existing list, or null.'],
                 'weight' => $nullableString + ['description' => 'Visible net weight including its unit.'],
                 'metadata' => [
                     'type' => 'object',
@@ -65,17 +71,25 @@ class ProductImageAnalysisDefinition
      */
     public function result(array $analysis, array $providerMetadata): ProductImageAnalysisResult
     {
+        $name = $this->nullableString($analysis['name'] ?? null);
+        $matchedCategory = $this->categories->match($this->nullableString($analysis['category'] ?? null));
+        $warnings = array_values(array_filter(
+            is_array($analysis['warnings'] ?? null) ? $analysis['warnings'] : [],
+            fn (mixed $warning) => is_string($warning) && trim($warning) !== '',
+        ));
+
+        if ($name && ! $matchedCategory) {
+            $warnings[] = "Product '{$name}' could not be matched confidently to an existing category. Admin selection is required.";
+        }
+
         return new ProductImageAnalysisResult(
-            name: $this->nullableString($analysis['name'] ?? null),
+            name: $name,
             brand: $this->nullableString($analysis['brand'] ?? null),
-            category: $this->nullableString($analysis['category'] ?? null),
+            category: $matchedCategory?->name,
             weight: $this->nullableString($analysis['weight'] ?? null),
             metadata: is_array($analysis['metadata'] ?? null) ? $analysis['metadata'] : [],
             confidence: is_numeric($analysis['confidence'] ?? null) ? (float) $analysis['confidence'] : null,
-            warnings: array_values(array_filter(
-                is_array($analysis['warnings'] ?? null) ? $analysis['warnings'] : [],
-                fn (mixed $warning) => is_string($warning) && trim($warning) !== '',
-            )),
+            warnings: array_values(array_unique($warnings)),
             providerMetadata: $providerMetadata,
         );
     }

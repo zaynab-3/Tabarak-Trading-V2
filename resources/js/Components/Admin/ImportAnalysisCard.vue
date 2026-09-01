@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { Link, useForm } from '@inertiajs/vue3';
-import { ExternalLink, Send } from '@lucide/vue';
+import { AlertTriangle, ExternalLink, Send } from '@lucide/vue';
+import { computed } from 'vue';
 import StatusBadge from '@/Components/Admin/StatusBadge.vue';
-import type { ImportItem } from '@/types/catalogue';
+import type { ImportItem, TaxonomyRef } from '@/types/catalogue';
 
-const props = defineProps<{ item: ImportItem }>();
+const props = defineProps<{ item: ImportItem; categories: TaxonomyRef[] }>();
+
+const matchedCategory = computed(() => props.categories.find(
+    (category) => category.name.localeCompare(props.item.suggested_category ?? '', undefined, { sensitivity: 'accent' }) === 0,
+) ?? null);
 
 const detectedPackQuantity = () => {
     const value = props.item.suggested_metadata?.pack_quantity;
@@ -15,6 +20,7 @@ const detectedPackQuantity = () => {
 
 const form = useForm({
     name: props.item.suggested_name ?? '',
+    category_id: matchedCategory.value?.id ?? '',
     pack_quantity: detectedPackQuantity(),
     allows_open_quantity: false,
 });
@@ -67,11 +73,23 @@ const confidenceLabel = (confidence: string | null) => {
             <p v-if="item.warnings?.length" class="mt-3 border-l-2 border-saffron-500 pl-3 text-xs leading-5 text-slate-600">
                 {{ item.warnings.join(' ') }}
             </p>
+            <div v-if="item.suggested_name && !matchedCategory" class="mt-3 flex items-start gap-2 border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
+                <AlertTriangle class="mt-0.5 size-4 shrink-0" />
+                <span>AI could not assign <strong>{{ item.suggested_name }}</strong> to one of your existing categories. Choose one below or leave it Uncategorized.</span>
+            </div>
             <form v-if="item.status === 'review' && item.suggested_name" class="mt-4 space-y-3 border-t border-oat-200 pt-4" @submit.prevent="publish">
                 <label class="block">
                     <span class="field-label">Product name</span>
                     <input v-model="form.name" class="field-input" maxlength="180" required />
                     <span v-if="form.errors.name" class="mt-1 block text-xs text-red-600">{{ form.errors.name }}</span>
+                </label>
+                <label class="block">
+                    <span class="field-label">Existing category</span>
+                    <select v-model="form.category_id" class="field-input">
+                        <option value="">Uncategorized — admin review needed</option>
+                        <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
+                    </select>
+                    <span v-if="form.errors.category_id" class="mt-1 block text-xs text-red-600">{{ form.errors.category_id }}</span>
                 </label>
                 <div class="grid grid-cols-[1fr_auto] gap-3">
                     <label class="block">

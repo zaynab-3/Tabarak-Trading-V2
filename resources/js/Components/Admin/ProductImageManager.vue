@@ -1,14 +1,26 @@
 <script setup lang="ts">
 import { router, useForm } from '@inertiajs/vue3';
 import { Star, Trash2 } from '@lucide/vue';
+import { ref } from 'vue';
+import ConfirmDialog from '@/Components/Shared/ConfirmDialog.vue';
 import type { Product, ProductImage } from '@/types/catalogue';
 import MediaUploader from '@/Components/Admin/MediaUploader.vue';
 
 const props = defineProps<{ product: Product }>();
 const form = useForm<{ images: File[] }>({ images: [] });
+const pendingDelete = ref<ProductImage | null>(null);
+const deleteProcessing = ref(false);
 const selected = (files: File[]) => { form.images = files; };
 const upload = () => form.post(route('admin.products.images.store', props.product.slug), { forceFormData: true, onSuccess: () => form.reset() });
-const remove = (image: ProductImage) => { if (window.confirm('Remove this image from the product?')) router.delete(route('admin.products.images.destroy', [props.product.slug, image.id])); };
+const remove = (image: ProductImage) => { pendingDelete.value = image; };
+const confirmDelete = () => {
+    if (!pendingDelete.value) return;
+    deleteProcessing.value = true;
+    router.delete(route('admin.products.images.destroy', [props.product.slug, pendingDelete.value.id]), {
+        preserveScroll: true,
+        onFinish: () => { deleteProcessing.value = false; pendingDelete.value = null; },
+    });
+};
 const primary = (image: ProductImage) => router.patch(route('admin.products.images.primary', [props.product.slug, image.id]));
 </script>
 
@@ -22,5 +34,14 @@ const primary = (image: ProductImage) => router.patch(route('admin.products.imag
             </div>
             <div v-else class="flex min-h-48 items-center justify-center rounded-lg border border-dashed border-tabarak-line bg-tabarak-mist text-sm text-slate-500">No product images yet.</div>
         </div>
+        <ConfirmDialog
+            :open="Boolean(pendingDelete)"
+            title="Remove product image?"
+            description="This image will be detached from this product. The media-library file will remain available."
+            confirm-label="Remove image"
+            :processing="deleteProcessing"
+            @cancel="pendingDelete = null"
+            @confirm="confirmDelete"
+        />
     </section>
 </template>

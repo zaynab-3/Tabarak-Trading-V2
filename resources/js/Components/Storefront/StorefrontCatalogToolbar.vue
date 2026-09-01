@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RotateCcw } from '@lucide/vue';
 import { computed } from 'vue';
+import SelectMenu, { type SelectOption } from '@/Components/Shared/SelectMenu.vue';
 import { storefrontHeaderVisible } from '@/Composables/useAutoHideStorefrontHeader';
 import type { ProductFilters } from '@/Composables/useProductFilters';
 import type { TaxonomyRef } from '@/types/catalogue';
@@ -16,6 +17,15 @@ const emit = defineEmits<{ apply: []; reset: [] }>();
 const selectedCategory = computed(() => props.categories.find(
     (category) => String(category.id) === String(props.filters.category),
 ) ?? null);
+const brandOptions = computed<SelectOption[]>(() => [
+    { value: '', label: props.filters.category ? 'All brands in category' : 'All brands' },
+    ...props.brands.map((brand) => ({ value: brand.id, label: brand.name })),
+]);
+const sortOptions: SelectOption[] = [
+    { value: 'newest', label: 'Newest' },
+    { value: 'name-asc', label: 'Name A–Z' },
+    { value: 'name-desc', label: 'Name Z–A' },
+];
 
 const selectCategory = (categoryId: number | '') => {
     props.filters.category = categoryId;
@@ -57,21 +67,8 @@ const selectCategory = (categoryId: number | '') => {
             </div>
 
             <div class="grid w-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)_44px] gap-2 sm:w-auto sm:grid-cols-[160px_140px_44px]">
-                <label class="block">
-                    <span class="sr-only">Filter by brand</span>
-                    <select v-model="filters.brand" class="min-h-10 w-full rounded-md border-tabarak-line bg-white py-2 text-sm text-tabarak-ink focus:border-tabarak-blue focus:ring-tabarak-blue" aria-label="Filter by brand" @change="emit('apply')">
-                        <option value="">{{ filters.category ? 'All brands in category' : 'All brands' }}</option>
-                        <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}</option>
-                    </select>
-                </label>
-                <label class="block">
-                    <span class="sr-only">Sort products</span>
-                    <select v-model="filters.sort" class="min-h-10 w-full rounded-md border-tabarak-line bg-white py-2 text-sm text-tabarak-ink focus:border-tabarak-blue focus:ring-tabarak-blue" aria-label="Sort products" @change="emit('apply')">
-                        <option value="newest">Newest</option>
-                        <option value="name-asc">Name A–Z</option>
-                        <option value="name-desc">Name Z–A</option>
-                    </select>
-                </label>
+                <SelectMenu v-model="filters.brand" :options="brandOptions" aria-label="Filter by brand" @change="emit('apply')" />
+                <SelectMenu v-model="filters.sort" :options="sortOptions" aria-label="Sort products" @change="emit('apply')" />
                 <button class="grid size-11 place-items-center rounded-md border border-tabarak-line bg-white text-tabarak-blue transition hover:border-tabarak-orange hover:text-tabarak-orange" type="button" aria-label="Reset catalogue filters" title="Reset filters" @click="emit('reset')">
                     <RotateCcw class="size-4" />
                 </button>

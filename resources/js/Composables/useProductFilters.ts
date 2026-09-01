@@ -10,7 +10,9 @@ export interface ProductFilters {
 }
 
 export function useProductFilters(path: string, initial: ProductFilters) {
-    const filters = reactive<ProductFilters>({ search: '', category: '', brand: '', status: '', sort: 'newest', ...initial });
+    const initialFilters = { ...initial } as ProductFilters & { page?: number };
+    delete initialFilters.page;
+    const filters = reactive<ProductFilters>({ search: '', category: '', brand: '', status: '', sort: 'newest', ...initialFilters });
 
     const apply = () => router.get(path, { ...filters }, { preserveState: true, preserveScroll: true, replace: true });
     const reset = () => {

@@ -3,6 +3,8 @@ import { Link } from '@inertiajs/vue3';
 import { ArrowRight, Image as ImageIcon } from '@lucide/vue';
 import type { Product } from '@/types/catalogue';
 import { productPackLabel } from '@/Utils/format';
+import { formatMoney } from '@/Utils/format';
+import AddToCartButton from '@/Components/Storefront/AddToCartButton.vue';
 
 defineProps<{ product: Product }>();
 </script>
@@ -25,9 +27,13 @@ defineProps<{ product: Product }>();
                 <Link :href="route('products.show', product.slug)">{{ product.name }}</Link>
             </h3>
             <p class="mt-3 text-sm text-slate-500">{{ productPackLabel(product) }}</p>
-            <Link :href="route('products.show', product.slug)" class="mt-auto flex min-h-11 items-center justify-between border-t border-tabarak-line pt-4 text-sm font-bold text-tabarak-blue">
-                <span>View product</span><ArrowRight class="size-4 transition group-hover:translate-x-0.5" />
-            </Link>
+            <p v-if="product.unit_price" class="mt-2 text-lg font-bold text-tabarak-blue">{{ formatMoney(product.unit_price) }}</p>
+            <div class="mt-auto flex flex-wrap items-center gap-2 border-t border-tabarak-line pt-4">
+                <Link :href="route('products.show', product.slug)" class="flex min-h-11 flex-1 items-center justify-between text-sm font-bold text-tabarak-blue">
+                    <span>View product</span><ArrowRight class="size-4 transition group-hover:translate-x-0.5" />
+                </Link>
+                <AddToCartButton v-if="product.unit_price" :product="product" compact />
+            </div>
         </div>
     </article>
 </template>

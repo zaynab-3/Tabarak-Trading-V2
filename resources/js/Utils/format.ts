@@ -1,6 +1,12 @@
 export const formatDate = (value?: string | null): string =>
     value ? new Intl.DateTimeFormat('en-LB', { dateStyle: 'medium' }).format(new Date(value)) : '—';
 
+export const formatDateTime = (value?: string | null): string =>
+    value ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—';
+
+export const formatMoney = (value: string | number, currency = 'USD'): string =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(value));
+
 export const humanFileSize = (bytes = 0): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;

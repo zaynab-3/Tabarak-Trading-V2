@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import ConfirmDialog from '@/Components/Shared/ConfirmDialog.vue';
 import MediaEditModal from '@/Components/Admin/MediaEditModal.vue';
 import MediaLibraryCard from '@/Components/Admin/MediaLibraryCard.vue';
 import MediaUploader from '@/Components/Admin/MediaUploader.vue';
@@ -14,6 +15,8 @@ const form = useForm<{ images: File[]; alt_text: string }>({ images: [], alt_tex
 const items = ref<MediaItem[]>([...props.media.data]);
 const editing = ref<MediaItem | null>(null);
 const draggedIndex = ref<number | null>(null);
+const pendingDelete = ref<MediaItem | null>(null);
+const deleteProcessing = ref(false);
 
 watch(() => props.media.data, (value) => { items.value = [...value]; });
 
@@ -25,12 +28,14 @@ const usageCount = (item: MediaItem) => (item.product_images_count ?? 0)
     + (item.category_images_count ?? 0)
     + (item.brand_logos_count ?? 0);
 
-const remove = (item: MediaItem) => {
-    const uses = usageCount(item);
-    const warning = uses
-        ? `This image is used in ${uses} place(s). Deleting it will remove those catalogue links. Continue?`
-        : 'Permanently delete this image?';
-    if (window.confirm(warning)) router.delete(route('admin.media.destroy', item.id), { preserveScroll: true });
+const remove = (item: MediaItem) => { pendingDelete.value = item; };
+const confirmDelete = () => {
+    if (!pendingDelete.value) return;
+    deleteProcessing.value = true;
+    router.delete(route('admin.media.destroy', pendingDelete.value.id), {
+        preserveScroll: true,
+        onFinish: () => { deleteProcessing.value = false; pendingDelete.value = null; },
+    });
 };
 
 const saveOrder = () => router.put(
@@ -70,5 +75,14 @@ const drop = (target: number) => {
         </div>
         <div class="mt-8"><Pagination :links="media.links" /></div>
         <MediaEditModal v-if="editing" :key="editing.id" :item="editing" @close="editing = null" />
+        <ConfirmDialog
+            :open="Boolean(pendingDelete)"
+            title="Delete image permanently?"
+            :description="pendingDelete && usageCount(pendingDelete) ? `This image is used in ${usageCount(pendingDelete)} place(s). Deleting it will also remove those catalogue links.` : 'This image will be permanently removed from the media library. This cannot be undone.'"
+            confirm-label="Delete image"
+            :processing="deleteProcessing"
+            @cancel="pendingDelete = null"
+            @confirm="confirmDelete"
+        />
     </AdminLayout>
 </template>

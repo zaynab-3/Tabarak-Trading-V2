@@ -3,6 +3,7 @@ import { Link, useForm } from '@inertiajs/vue3';
 import { AlertTriangle, ExternalLink, Send } from '@lucide/vue';
 import { computed } from 'vue';
 import StatusBadge from '@/Components/Admin/StatusBadge.vue';
+import SelectMenu, { type SelectOption } from '@/Components/Shared/SelectMenu.vue';
 import type { ImportItem, TaxonomyRef } from '@/types/catalogue';
 
 const props = defineProps<{ item: ImportItem; categories: TaxonomyRef[] }>();
@@ -10,6 +11,10 @@ const props = defineProps<{ item: ImportItem; categories: TaxonomyRef[] }>();
 const matchedCategory = computed(() => props.categories.find(
     (category) => category.name.localeCompare(props.item.suggested_category ?? '', undefined, { sensitivity: 'accent' }) === 0,
 ) ?? null);
+const categoryOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Uncategorized — admin review needed' },
+    ...props.categories.map((category) => ({ value: category.id, label: category.name })),
+]);
 
 const detectedPackQuantity = () => {
     const value = props.item.suggested_metadata?.pack_quantity;
@@ -85,10 +90,7 @@ const confidenceLabel = (confidence: string | null) => {
                 </label>
                 <label class="block">
                     <span class="field-label">Existing category</span>
-                    <select v-model="form.category_id" class="field-input">
-                        <option value="">Uncategorized — admin review needed</option>
-                        <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
-                    </select>
+                    <SelectMenu v-model="form.category_id" :options="categoryOptions" aria-label="Existing category" />
                     <span v-if="form.errors.category_id" class="mt-1 block text-xs text-red-600">{{ form.errors.category_id }}</span>
                 </label>
                 <div class="grid grid-cols-[1fr_auto] gap-3">

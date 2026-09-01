@@ -20,6 +20,8 @@ class ProductPresenter
             'pack_quantity' => $product->pack_quantity,
             'allows_open_quantity' => $product->allows_open_quantity,
             'unit_label' => $product->unit_label,
+            'unit_price' => $product->unit_price,
+            'currency' => 'USD',
             'status' => $product->status->value,
             'is_featured' => $product->is_featured,
             'updated_at' => $product->updated_at?->toISOString(),

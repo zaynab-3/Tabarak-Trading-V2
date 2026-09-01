@@ -39,6 +39,8 @@ export interface Product {
     pack_quantity: number | null;
     allows_open_quantity: boolean;
     unit_label: string | null;
+    unit_price: string | number | null;
+    currency: 'USD';
     status: 'draft' | 'published' | 'archived';
     is_featured: boolean;
     updated_at?: string;

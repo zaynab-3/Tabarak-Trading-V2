@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft, BadgeCheck, Box, Layers3 } from '@lucide/vue';
 import ProductGallery from '@/Components/Storefront/ProductGallery.vue';
+import ProductOrderPanel from '@/Components/Storefront/ProductOrderPanel.vue';
 import ProductGrid from '@/Components/Storefront/ProductGrid.vue';
 import SectionHeading from '@/Components/Storefront/SectionHeading.vue';
 import StorefrontLayout from '@/Layouts/StorefrontLayout.vue';
@@ -14,8 +15,8 @@ defineProps<{ product: Product; relatedProducts: Product[] }>();
 <template>
     <Head :title="product.name" />
     <StorefrontLayout>
-        <div class="page-shell py-6 md:py-10">
-            <Link :href="route('shop')" class="mb-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-tabarak-blue transition hover:text-tabarak-orange">
+        <div class="page-shell pb-8 pt-2 md:pb-10 md:pt-3">
+            <Link :href="route('shop')" class="mb-3 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-tabarak-blue transition hover:text-tabarak-orange">
                 <ArrowLeft class="size-4" /> Back to catalogue
             </Link>
 
@@ -44,7 +45,9 @@ defineProps<{ product: Product; relatedProducts: Product[] }>();
                         </div>
                     </div>
 
-                    <div class="mt-7 flex items-start gap-3 rounded-md border-l-4 border-tabarak-orange bg-[#FFF4EE] p-4">
+                    <ProductOrderPanel :product="product" />
+
+                    <div v-if="!product.unit_price" class="mt-7 flex items-start gap-3 rounded-md border-l-4 border-tabarak-orange bg-[#FFF4EE] p-4">
                         <BadgeCheck class="mt-0.5 size-5 shrink-0 text-tabarak-orange" />
                         <p class="text-sm leading-6 text-slate-700">Wholesale catalogue listing. Contact Tabarak Trading for current availability and ordering details.</p>
                     </div>

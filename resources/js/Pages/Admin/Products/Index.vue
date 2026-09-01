@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Archive, Image as ImageIcon, Pencil, Plus, RotateCcw, Trash2 } from '@lucide/vue';
+import { computed, ref } from 'vue';
+import ConfirmDialog from '@/Components/Shared/ConfirmDialog.vue';
 import DataTable from '@/Components/Admin/DataTable.vue';
 import PageHeader from '@/Components/Admin/PageHeader.vue';
 import StatusBadge from '@/Components/Admin/StatusBadge.vue';
@@ -9,7 +11,7 @@ import ProductFilters from '@/Components/Storefront/ProductFilters.vue';
 import { useProductFilters, type ProductFilters as FilterValues } from '@/Composables/useProductFilters';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import type { Paginated, Product, TaxonomyRef } from '@/types/catalogue';
-import { formatDate, productPackLabel } from '@/Utils/format';
+import { formatDate, formatMoney, productPackLabel } from '@/Utils/format';
 
 const props = defineProps<{
     products: Paginated<Product>;
@@ -20,15 +22,21 @@ const props = defineProps<{
 }>();
 
 const { filters, apply, reset } = useProductFilters(route('admin.products.index'), props.filters);
-const archive = (product: Product) => {
-    if (window.confirm(`Archive ${product.name}?`)) router.patch(route('admin.products.archive', product.slug));
+const pendingAction = ref<{ type: 'archive' | 'delete'; product: Product } | null>(null);
+const actionProcessing = ref(false);
+const dialogTitle = computed(() => pendingAction.value?.type === 'delete' ? 'Delete product permanently?' : 'Archive this product?');
+const dialogDescription = computed(() => pendingAction.value?.type === 'delete'
+    ? `${pendingAction.value.product.name} will be permanently removed, including its catalogue relationships. This cannot be undone.`
+    : `${pendingAction.value?.product.name} will be removed from the public catalogue and kept in the admin archive.`);
+const confirmAction = () => {
+    if (!pendingAction.value) return;
+    actionProcessing.value = true;
+    const { type, product } = pendingAction.value;
+    const options = { preserveScroll: true, onFinish: () => { actionProcessing.value = false; pendingAction.value = null; } };
+    if (type === 'delete') router.delete(route('admin.products.destroy', product.slug), options);
+    else router.patch(route('admin.products.archive', product.slug), {}, options);
 };
 const restore = (product: Product) => router.patch(route('admin.products.restore', product.slug));
-const remove = (product: Product) => {
-    if (window.confirm(`Permanently delete ${product.name}? This cannot be undone.`)) {
-        router.delete(route('admin.products.destroy', product.slug), { preserveScroll: true });
-    }
-};
 </script>
 
 <template>
@@ -47,6 +55,7 @@ const remove = (product: Product) => {
                         <th class="px-4 py-3">Product</th>
                         <th class="px-4 py-3">Classification</th>
                         <th class="hidden px-4 py-3 xl:table-cell">Pack details</th>
+                        <th class="px-4 py-3">USD price</th>
                         <th class="px-4 py-3">Status</th>
                         <th class="hidden px-4 py-3 2xl:table-cell">Updated</th>
                         <th class="px-4 py-3 text-right">Actions</th>
@@ -74,14 +83,15 @@ const remove = (product: Product) => {
                             <p class="mt-1 text-xs text-slate-400">{{ product.category?.name || 'Uncategorized' }}</p>
                         </td>
                         <td class="hidden px-4 py-3 text-slate-600 xl:table-cell">{{ productPackLabel(product) }}</td>
+                        <td class="px-4 py-3 font-bold text-tabarak-ink">{{ product.unit_price ? formatMoney(product.unit_price) : 'Not priced' }}</td>
                         <td class="px-4 py-3"><StatusBadge :status="product.status" /></td>
                         <td class="hidden px-4 py-3 text-slate-500 2xl:table-cell">{{ formatDate(product.updated_at) }}</td>
                         <td class="px-4 py-3">
                             <div class="flex justify-end gap-1.5">
                                 <Link :href="route('admin.products.edit', product.slug)" class="admin-table-action" aria-label="Edit product"><Pencil class="size-4" /></Link>
-                                <button v-if="product.status !== 'archived'" class="admin-table-action" type="button" aria-label="Archive product" @click="archive(product)"><Archive class="size-4" /></button>
+                                <button v-if="product.status !== 'archived'" class="admin-table-action" type="button" aria-label="Archive product" @click="pendingAction = { type: 'archive', product }"><Archive class="size-4" /></button>
                                 <button v-else class="admin-table-action" type="button" aria-label="Restore product" @click="restore(product)"><RotateCcw class="size-4" /></button>
-                                <button class="admin-table-action border-red-200 text-red-600 hover:border-red-300 hover:text-red-700" type="button" aria-label="Permanently delete product" title="Permanently delete" @click="remove(product)"><Trash2 class="size-4" /></button>
+                                <button class="admin-table-action border-red-200 text-red-600 hover:border-red-300 hover:text-red-700" type="button" aria-label="Permanently delete product" title="Permanently delete" @click="pendingAction = { type: 'delete', product }"><Trash2 class="size-4" /></button>
                             </div>
                         </td>
                     </tr>
@@ -89,5 +99,15 @@ const remove = (product: Product) => {
             </DataTable>
         </div>
         <div class="mt-8"><Pagination :links="products.links" /></div>
+        <ConfirmDialog
+            :open="Boolean(pendingAction)"
+            :title="dialogTitle"
+            :description="dialogDescription"
+            :confirm-label="pendingAction?.type === 'delete' ? 'Delete permanently' : 'Archive product'"
+            :tone="pendingAction?.type === 'delete' ? 'danger' : 'warning'"
+            :processing="actionProcessing"
+            @cancel="pendingAction = null"
+            @confirm="confirmAction"
+        />
     </AdminLayout>
 </template>

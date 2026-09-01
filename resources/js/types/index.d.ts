@@ -1,3 +1,5 @@
+import type { CartSummary } from './orders';
+
 export interface User {
     id: number;
     name: string;
@@ -15,4 +17,5 @@ export type PageProps<
         success?: string;
         error?: string;
     };
+    cart: CartSummary;
 };

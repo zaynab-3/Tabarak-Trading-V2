@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ImportBatchPublicationController;
 use App\Http\Controllers\Admin\ImportItemPublicationController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MediaOrderController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductImageController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -27,6 +28,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
 
         Route::resource('products', ProductController::class)->except(['show']);
+        Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
+        Route::patch('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
         Route::patch('/products/{product}/archive', [ProductController::class, 'archive'])->name('products.archive');
         Route::patch('/products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');
         Route::post('/products/{product}/images', [ProductImageController::class, 'store'])->name('products.images.store');

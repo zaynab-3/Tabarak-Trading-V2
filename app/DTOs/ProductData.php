@@ -19,6 +19,7 @@ readonly class ProductData
         public ?int $packQuantity,
         public bool $allowsOpenQuantity,
         public ?string $unitLabel,
+        public ?float $unitPrice,
         public ProductStatus $status,
         public bool $isFeatured,
     ) {}
@@ -38,6 +39,7 @@ readonly class ProductData
             packQuantity: filled($data['pack_quantity'] ?? null) ? (int) $data['pack_quantity'] : null,
             allowsOpenQuantity: (bool) ($data['allows_open_quantity'] ?? false),
             unitLabel: filled($data['unit_label'] ?? null) ? trim((string) $data['unit_label']) : null,
+            unitPrice: filled($data['unit_price'] ?? null) ? (float) $data['unit_price'] : null,
             status: ProductStatus::from((string) $data['status']),
             isFeatured: (bool) ($data['is_featured'] ?? false),
         );
@@ -59,6 +61,7 @@ readonly class ProductData
             'pack_quantity' => $this->packQuantity,
             'allows_open_quantity' => $this->allowsOpenQuantity,
             'unit_label' => $this->unitLabel,
+            'unit_price' => $this->unitPrice,
             'status' => $this->status,
             'is_featured' => $this->isFeatured,
             'published_at' => $this->status === ProductStatus::Published ? now() : null,

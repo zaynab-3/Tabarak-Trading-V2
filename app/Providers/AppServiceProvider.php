@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Imports\OpenAiProductImageAnalyzer;
 use App\Services\Imports\PlaceholderProductImageAnalyzer;
 use App\Services\Imports\ProductImageAnalyzerInterface;
 use Illuminate\Support\Facades\Vite;
@@ -14,7 +15,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(ProductImageAnalyzerInterface::class, PlaceholderProductImageAnalyzer::class);
+        $this->app->bind(ProductImageAnalyzerInterface::class, function ($app) {
+            return match (config('imports.analyzer')) {
+                'openai' => $app->make(OpenAiProductImageAnalyzer::class),
+                default => $app->make(PlaceholderProductImageAnalyzer::class),
+            };
+        });
     }
 
     /**

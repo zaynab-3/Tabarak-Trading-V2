@@ -76,7 +76,21 @@ export interface ImportItem {
     suggested_weight: string | null;
     confidence: string | null;
     warnings: string[] | null;
+    suggested_metadata: Record<string, string | null> | null;
     media: MediaItem;
+}
+
+export interface ProductImageAnalyzerStatus {
+    driver: string;
+    enabled: boolean;
+    provider: string;
+    model: string | null;
+}
+
+export interface ImportConfiguration {
+    upload_chunk_size: number;
+    max_image_size_mb: number;
+    analyzer: ProductImageAnalyzerStatus;
 }
 
 export interface ImportBatch {

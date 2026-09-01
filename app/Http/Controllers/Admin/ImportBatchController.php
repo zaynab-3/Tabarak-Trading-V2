@@ -6,6 +6,7 @@ use App\Actions\Imports\CreateImportBatch;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Imports\StoreImportBatchRequest;
 use App\Models\ImportBatch;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -19,13 +20,26 @@ class ImportBatchController extends Controller
 
         return Inertia::render('Admin/Imports/Index', [
             'batches' => ImportBatch::query()->with('creator:id,name')->latest()->paginate(15),
+            'importConfig' => $this->importConfig(),
         ]);
     }
 
-    public function store(StoreImportBatchRequest $request, CreateImportBatch $action): RedirectResponse
+    public function store(StoreImportBatchRequest $request, CreateImportBatch $action): RedirectResponse|JsonResponse
     {
         Gate::authorize('create', ImportBatch::class);
-        $batch = $action->handle($request->user(), $request->string('name')->toString() ?: null, $request->file('images'));
+        $batch = $action->handle(
+            $request->user(),
+            $request->string('name')->toString() ?: null,
+            $request->file('images', []),
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'batch_id' => $batch->id,
+                'upload_url' => route('admin.imports.images.store', $batch),
+                'show_url' => route('admin.imports.show', $batch),
+            ], 201);
+        }
 
         return redirect()->route('admin.imports.show', $batch)->with('success', 'Import batch created. Images are queued for review preparation.');
     }
@@ -35,6 +49,27 @@ class ImportBatchController extends Controller
         Gate::authorize('view', $importBatch);
         $importBatch->load(['creator:id,name', 'items.media', 'items.approvedProduct:id,name,slug']);
 
-        return Inertia::render('Admin/Imports/Show', ['batch' => $importBatch]);
+        return Inertia::render('Admin/Imports/Show', [
+            'batch' => $importBatch,
+            'analyzer' => $this->importConfig()['analyzer'],
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function importConfig(): array
+    {
+        $driver = (string) config('imports.analyzer');
+        $enabled = $driver === 'openai' && filled(config('imports.openai.api_key'));
+
+        return [
+            'upload_chunk_size' => (int) config('imports.upload_chunk_size'),
+            'max_image_size_mb' => (int) config('imports.max_image_size_kb') / 1024,
+            'analyzer' => [
+                'driver' => $driver,
+                'enabled' => $enabled,
+                'provider' => $enabled ? 'OpenAI' : 'Manual review',
+                'model' => $enabled ? (string) config('imports.openai.model') : null,
+            ],
+        ];
     }
 }

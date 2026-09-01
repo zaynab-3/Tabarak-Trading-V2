@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Enums\ImportBatchStatus;
+use App\Actions\Imports\RefreshImportBatchProgress;
 use App\Enums\ImportItemStatus;
 use App\Models\ImportItem;
 use App\Services\Imports\ProductImageAnalyzerInterface;
@@ -19,10 +19,12 @@ class AnalyzeImportItem implements ShouldQueue
 
     public function __construct(public readonly ImportItem $item) {}
 
-    public function handle(ProductImageAnalyzerInterface $analyzer): void
-    {
+    public function handle(
+        ProductImageAnalyzerInterface $analyzer,
+        RefreshImportBatchProgress $refreshProgress,
+    ): void {
+        $this->item->refresh();
         $this->item->update(['status' => ImportItemStatus::Processing]);
-        $this->item->batch()->update(['status' => ImportBatchStatus::Processing]);
 
         $result = $analyzer->analyze($this->item->media);
 
@@ -38,16 +40,20 @@ class AnalyzeImportItem implements ShouldQueue
             'provider_metadata' => $result->providerMetadata,
         ]);
 
-        $batch = $this->item->batch;
-        $batch->update([
-            'processed_items' => $batch->items()->whereIn('status', [ImportItemStatus::Review, ImportItemStatus::Approved, ImportItemStatus::Rejected])->count(),
-            'status' => ImportBatchStatus::Review,
-        ]);
+        $refreshProgress->handle($this->item->batch);
     }
 
     public function failed(Throwable $exception): void
     {
-        $this->item->update(['status' => ImportItemStatus::Failed]);
-        Log::error('Import item analysis failed', ['import_item_id' => $this->item->id, 'exception' => $exception::class]);
+        $this->item->update([
+            'status' => ImportItemStatus::Failed,
+            'warnings' => ['Automatic analysis failed. Review this image manually or retry it later.'],
+        ]);
+        app(RefreshImportBatchProgress::class)->handle($this->item->batch);
+        Log::error('Import item analysis failed', [
+            'import_item_id' => $this->item->id,
+            'exception' => $exception::class,
+            'message' => $exception->getMessage(),
+        ]);
     }
 }

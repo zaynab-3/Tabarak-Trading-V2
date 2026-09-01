@@ -1,8 +1,8 @@
 # Tabarak Trading V2
 
-Tabarak Trading V2 is a fresh wholesale food catalogue and administration platform. It provides a public product catalogue, protected administration, reusable media handling, and the database/job foundation for a future human-reviewed AI image import workflow.
+Tabarak Trading V2 is a fresh wholesale food catalogue and administration platform. It provides a public product catalogue, protected administration, reusable media handling, and a human-reviewed AI-assisted bulk image import workflow.
 
-This repository is independent from every previous Tabarak Trading codebase. It does not include checkout, payments, customer accounts, live inventory, deployment configuration, or an external AI provider.
+This repository is independent from every previous Tabarak Trading codebase. It does not include checkout, payments, customer accounts, live inventory, or deployment configuration. OpenAI image analysis is optional and disabled until a server-side API key is configured.
 
 ## Stack
 
@@ -59,6 +59,14 @@ php artisan queue:work
 
 Open `http://localhost:8000` for the storefront and `http://localhost:8000/admin/login` for administration.
 
+To use another port, for example when port 8000 is occupied:
+
+```bash
+php artisan serve --host=127.0.0.1 --port=8001
+```
+
+Then open `http://127.0.0.1:8001` or `http://127.0.0.1:8001/admin/login`.
+
 ## Production build
 
 ```bash
@@ -87,8 +95,8 @@ Backend responsibilities are split into small, focused layers:
 - `app/Models` defines normalized relationships and explicit mass-assignment fields.
 - `app/Policies` denies mutations unless the authenticated user is an administrator.
 - `app/Services/Products` owns reusable query, presentation, and slug behavior.
-- `app/Services/Imports` defines `ProductImageAnalyzerInterface` and the provider-free placeholder implementation.
-- `app/Jobs/AnalyzeImportItem.php` is the queue seam for a future external analyzer.
+- `app/Services/Imports` defines `ProductImageAnalyzerInterface`, the manual placeholder, and the swappable OpenAI implementation.
+- `app/Jobs/AnalyzeImportItem.php` analyzes each image independently without blocking the upload request.
 
 Frontend responsibilities are similarly separated:
 
@@ -114,13 +122,29 @@ The application tables are:
 
 Media records are reusable across products, category imagery, brand logos, and import drafts. Stored files use generated UUID filenames and are served through an ID-bound public media route, so local development does not depend on symlink support. SHA-256 checksums support exact-file duplicate detection. Deleting products does not delete reusable media.
 
-## Import workflow foundation
+## AI-assisted bulk image imports
 
-An administrator can create a batch and upload multiple validated images. Each image becomes a media record and related import item, then an `AnalyzeImportItem` job is dispatched. The current placeholder analyzer returns no product guesses and adds a manual-review warning.
+Open **Admin → Bulk Import**, choose any practical number of images in one selection, and submit the batch. The browser uploads large selections in configurable groups instead of placing every file in one HTTP request. Each validated image becomes a reusable media record and import item, and an independent `AnalyzeImportItem` queue job starts immediately. The review page polls for results and reveals names and package details as jobs finish.
 
-A future provider must implement `App\Services\Imports\ProductImageAnalyzerInterface`.
+Each image must be JPG, PNG, or WebP and is limited to 8 MB by default. Change `IMPORT_UPLOAD_CHUNK_SIZE` or `IMPORT_IMAGE_MAX_SIZE_KB` when the server environment needs different limits.
 
-The approval and product-creation workflow should be implemented as a later phase. External analysis must continue producing drafts only; it must never publish products automatically.
+Automatic analysis is disabled by default. Create an OpenAI API key in the OpenAI API dashboard and place it only in the local `.env` file:
+
+```dotenv
+PRODUCT_IMAGE_ANALYZER=openai
+OPENAI_API_KEY=your_server_side_api_key
+OPENAI_VISION_MODEL=gpt-4o-mini
+```
+
+Then reload configuration and restart long-running queue workers:
+
+```bash
+php artisan optimize:clear
+php artisan queue:restart
+php artisan queue:work --tries=3 --timeout=120
+```
+
+Never commit `.env` or expose the key to Vue/browser code. The provider returns product name, brand, category, weight, label text, SKU/barcode, flavor, packaging, pack quantity, description, confidence, and warnings. Results are drafts only and are never published automatically. The approval and transactional product-creation step remains the next workflow phase.
 
 ## Security notes
 

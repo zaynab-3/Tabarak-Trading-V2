@@ -12,12 +12,19 @@ const page = usePage<PageProps>();
 </script>
 
 <template>
-    <div class="min-h-screen bg-oat-50 md:grid md:grid-cols-[232px_minmax(0,1fr)]">
+    <div class="admin-shell min-h-screen bg-[#F7F8FC] md:grid md:grid-cols-[84px_minmax(0,1fr)] xl:grid-cols-[248px_minmax(0,1fr)]">
         <div class="fixed inset-y-0 left-0 z-50 hidden md:block"><AdminSidebar /></div>
-        <div v-if="mobileMenu" class="fixed inset-0 z-50 flex md:hidden"><div class="w-[280px]"><AdminSidebar mobile /></div><button class="flex-1 bg-slate-950/45 p-4 text-left text-white" aria-label="Close navigation" @click="mobileMenu = false"><X class="size-6" /></button></div>
+
+        <div v-if="mobileMenu" class="fixed inset-0 z-50 flex md:hidden">
+            <AdminSidebar mobile />
+            <button class="flex flex-1 items-start justify-end bg-slate-950/45 p-5 text-white backdrop-blur-sm" aria-label="Close navigation" @click="mobileMenu = false">
+                <X class="size-6" />
+            </button>
+        </div>
+
         <div class="min-w-0 md:col-start-2">
             <AdminHeader @menu="mobileMenu = true" />
-            <main class="p-4 md:p-6 xl:p-8">
+            <main class="mx-auto w-full max-w-[1600px] p-4 sm:p-5 md:p-6 xl:p-8">
                 <FlashMessage :success="page.props.flash.success" :error="page.props.flash.error" />
                 <slot />
             </main>

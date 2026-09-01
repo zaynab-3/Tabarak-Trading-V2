@@ -16,7 +16,7 @@ const submit = () => props.category
         <div class="grid grid-cols-2 gap-3"><label><span class="field-label">Parent</span><select v-model="form.parent_id" class="field-input"><option value="">None</option><option v-for="parent in parents.filter((item) => item.id !== category?.id)" :key="parent.id" :value="parent.id">{{ parent.name }}</option></select></label><label><span class="field-label">Sort order</span><input v-model="form.sort_order" class="field-input" min="0" type="number" /></label></div>
         <label class="block"><span class="field-label">Category image</span><select v-model="form.image_id" class="field-input"><option value="">No image</option><option v-for="item in media" :key="item.id" :value="item.id">{{ item.original_name || `Image #${item.id}` }}</option></select></label>
         <label class="block"><span class="field-label">Description</span><textarea v-model="form.description" class="field-input min-h-28" /></label>
-        <label class="flex items-center gap-2 text-sm font-semibold"><input v-model="form.is_active" type="checkbox" class="rounded border-oat-300 text-forest-800" /> Active</label>
+        <label class="flex min-h-11 items-center gap-2 text-sm font-semibold"><input v-model="form.is_active" type="checkbox" class="rounded border-tabarak-line text-tabarak-blue focus:ring-tabarak-blue" /> Active</label>
         <button class="btn-primary w-full" type="submit" :disabled="form.processing">{{ form.processing ? 'Saving…' : category ? 'Update category' : 'Create category' }}</button>
     </form>
 </template>

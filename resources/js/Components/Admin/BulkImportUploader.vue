@@ -33,12 +33,12 @@ const {
         />
 
         <div v-if="processing" class="mt-4">
-            <div class="mb-2 flex items-center justify-between text-xs font-bold text-forest-800">
+            <div class="mb-2 flex items-center justify-between text-xs font-bold text-tabarak-blue">
                 <span>Uploading {{ uploaded }} of {{ files.length }}</span>
                 <span>{{ progress }}%</span>
             </div>
-            <div class="h-2 overflow-hidden rounded-full bg-oat-200">
-                <div class="h-full rounded-full bg-saffron-500 transition-all" :style="{ width: `${progress}%` }" />
+            <div class="h-2 overflow-hidden rounded-full bg-tabarak-line">
+                <div class="h-full rounded-full bg-tabarak-orange transition-all" :style="{ width: `${progress}%` }" />
             </div>
             <p class="mt-2 text-xs text-slate-500">SVG files are converted to PNG in your browser. AI analysis starts while the remaining groups upload.</p>
         </div>

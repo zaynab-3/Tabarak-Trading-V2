@@ -47,7 +47,7 @@ useImportBatchPolling(
         <AiAnalyzerStatus :analyzer="analyzer" class="mb-5" />
         <div
             v-if="batch.processed_items < batch.total_items"
-            class="mb-5 flex items-center gap-3 border border-blue-200 bg-blue-50 p-4 text-sm font-semibold text-blue-900"
+            class="mb-5 flex items-center gap-3 rounded-lg border border-tabarak-line bg-tabarak-mist p-4 text-sm font-semibold text-tabarak-blue"
         >
             <LoaderCircle class="size-5 animate-spin" />
             Analysis is running. This page refreshes automatically as each product finishes.

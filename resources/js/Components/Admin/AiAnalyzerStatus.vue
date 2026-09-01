@@ -7,7 +7,7 @@ defineProps<{ analyzer: ProductImageAnalyzerStatus }>();
 
 <template>
     <div
-        class="flex items-start gap-3 border p-4 text-sm"
+        class="flex items-start gap-3 rounded-lg border p-4 text-sm"
         :class="analyzer.enabled ? 'border-emerald-200 bg-emerald-50 text-emerald-950' : 'border-amber-200 bg-amber-50 text-amber-950'"
     >
         <Sparkles v-if="analyzer.enabled" class="mt-0.5 size-5 shrink-0" />

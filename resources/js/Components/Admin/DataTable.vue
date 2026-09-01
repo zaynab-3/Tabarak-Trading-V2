@@ -5,7 +5,7 @@ defineProps<{ label: string }>();
 <template>
     <div class="surface overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[760px] border-collapse text-left text-sm" :aria-label="label">
+            <table class="w-full min-w-[680px] border-collapse text-left text-sm" :aria-label="label">
                 <slot />
             </table>
         </div>

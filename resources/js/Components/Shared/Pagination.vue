@@ -15,7 +15,7 @@ defineProps<{ links: PaginationLink[]; storefront?: boolean }>();
                 class="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border px-3 text-sm font-semibold transition"
                 :class="storefront
                     ? (link.active ? 'border-tabarak-blue bg-tabarak-blue text-white' : 'border-tabarak-line bg-white text-slate-700 hover:border-tabarak-orange hover:text-tabarak-orange')
-                    : (link.active ? 'border-forest-800 bg-forest-800 text-white' : 'border-oat-300 bg-white text-slate-700 hover:border-forest-600')"
+                    : (link.active ? 'border-tabarak-blue bg-tabarak-blue text-white' : 'border-tabarak-line bg-white text-slate-700 hover:border-tabarak-orange hover:text-tabarak-orange')"
                 v-html="link.label"
             />
             <span v-else class="inline-flex min-h-10 min-w-10 items-center justify-center px-2 text-sm text-slate-400" v-html="link.label" />

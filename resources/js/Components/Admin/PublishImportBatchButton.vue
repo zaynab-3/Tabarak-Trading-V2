@@ -12,9 +12,9 @@ const publish = () => {
 </script>
 
 <template>
-    <div class="flex flex-wrap items-center gap-2 border border-emerald-200 bg-emerald-50 px-3 py-2">
+    <div class="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
         <label class="flex items-center gap-2 text-xs font-bold text-emerald-900">
-            <input v-model="form.allows_open_quantity" type="checkbox" class="rounded border-emerald-300 text-forest-800 focus:ring-forest-700" />
+            <input v-model="form.allows_open_quantity" type="checkbox" class="rounded border-emerald-300 text-tabarak-blue focus:ring-tabarak-blue" />
             Open quantity for all
         </label>
         <button class="btn-primary min-h-9 px-3 py-2 text-xs" type="button" :disabled="form.processing" @click="publish">

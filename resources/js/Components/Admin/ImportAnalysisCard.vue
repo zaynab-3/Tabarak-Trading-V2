@@ -41,7 +41,7 @@ const confidenceLabel = (confidence: string | null) => {
 
 <template>
     <article class="surface overflow-hidden">
-        <div class="aspect-[4/3] bg-oat-100">
+        <div class="aspect-[4/3] bg-tabarak-mist p-3">
             <img
                 :src="item.media.url"
                 :alt="item.media.alt_text || `Import image ${item.id}`"
@@ -53,7 +53,7 @@ const confidenceLabel = (confidence: string | null) => {
                 <span class="text-xs font-bold text-slate-400">Item #{{ item.id }}</span>
                 <StatusBadge :status="item.status" />
             </div>
-            <h2 class="mt-3 font-display text-xl font-bold text-forest-900">
+            <h2 class="mt-3 font-display text-xl font-bold text-tabarak-ink">
                 {{ item.suggested_name || (['pending', 'processing'].includes(item.status) ? 'Analyzing product…' : 'Needs manual identification') }}
             </h2>
             <p class="mt-2 text-sm text-slate-500">
@@ -64,20 +64,20 @@ const confidenceLabel = (confidence: string | null) => {
             </p>
             <dl v-if="item.suggested_metadata" class="mt-4 grid grid-cols-2 gap-2 text-xs">
                 <template v-for="(value, key) in item.suggested_metadata" :key="key">
-                    <div v-if="value" class="rounded bg-oat-50 p-2">
+                    <div v-if="value" class="rounded bg-tabarak-mist p-2">
                         <dt class="font-bold capitalize text-slate-500">{{ String(key).replaceAll('_', ' ') }}</dt>
-                        <dd class="mt-1 line-clamp-3 text-forest-900">{{ value }}</dd>
+                        <dd class="mt-1 line-clamp-3 text-tabarak-ink">{{ value }}</dd>
                     </div>
                 </template>
             </dl>
-            <p v-if="item.warnings?.length" class="mt-3 border-l-2 border-saffron-500 pl-3 text-xs leading-5 text-slate-600">
+            <p v-if="item.warnings?.length" class="mt-3 border-l-2 border-tabarak-orange pl-3 text-xs leading-5 text-slate-600">
                 {{ item.warnings.join(' ') }}
             </p>
             <div v-if="item.suggested_name && !matchedCategory" class="mt-3 flex items-start gap-2 border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
                 <AlertTriangle class="mt-0.5 size-4 shrink-0" />
                 <span>AI could not assign <strong>{{ item.suggested_name }}</strong> to one of your existing categories. Choose one below or leave it Uncategorized.</span>
             </div>
-            <form v-if="item.status === 'review' && item.suggested_name" class="mt-4 space-y-3 border-t border-oat-200 pt-4" @submit.prevent="publish">
+            <form v-if="item.status === 'review' && item.suggested_name" class="mt-4 space-y-3 border-t border-tabarak-line pt-4" @submit.prevent="publish">
                 <label class="block">
                     <span class="field-label">Product name</span>
                     <input v-model="form.name" class="field-input" maxlength="180" required />
@@ -96,8 +96,8 @@ const confidenceLabel = (confidence: string | null) => {
                         <span class="field-label">Pack quantity</span>
                         <input v-model="form.pack_quantity" class="field-input" min="1" type="number" placeholder="Optional" />
                     </label>
-                    <label class="flex items-end gap-2 pb-3 text-xs font-bold text-forest-900">
-                        <input v-model="form.allows_open_quantity" type="checkbox" class="rounded border-oat-300 text-forest-800 focus:ring-forest-700" /> Open quantity
+                    <label class="flex items-end gap-2 pb-3 text-xs font-bold text-tabarak-ink">
+                        <input v-model="form.allows_open_quantity" type="checkbox" class="rounded border-tabarak-line text-tabarak-blue focus:ring-tabarak-blue" /> Open quantity
                     </label>
                 </div>
                 <button class="btn-primary w-full" type="submit" :disabled="form.processing">

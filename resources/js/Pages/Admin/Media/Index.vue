@@ -65,7 +65,7 @@ const drop = (target: number) => {
     <Head title="Media library" /><AdminLayout><PageHeader eyebrow="Assets" title="Media library" :description="`${media.total} safely named catalogue images with usage metadata.`" />
         <form class="surface mb-6 grid gap-4 p-5 md:grid-cols-[1fr_260px] md:items-end" @submit.prevent="upload"><MediaUploader multiple @change="selected" /><div><label class="block"><span class="field-label">Shared alt text</span><input v-model="form.alt_text" class="field-input" placeholder="Optional descriptive text" /></label><button class="btn-primary mt-3 w-full" type="submit" :disabled="!form.images.length || form.processing">{{ form.processing ? 'Uploading…' : 'Upload to library' }}</button></div></form>
         <p v-if="items.length" class="mb-3 text-xs text-slate-500">Drag images to reorder them, or use the arrow buttons on tablet. Changes save automatically.</p>
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
             <MediaLibraryCard v-for="(item, index) in items" :key="item.id" :item="item" :index="index" :total="items.length" @edit="editing = $event" @remove="remove" @move="move" @dragstart="startDrag" @drop="drop" />
         </div>
         <div class="mt-8"><Pagination :links="media.links" /></div>

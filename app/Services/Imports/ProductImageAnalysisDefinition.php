@@ -16,6 +16,7 @@ class ProductImageAnalysisDefinition
             'Analyze this single wholesale food product image.',
             'Read the visible package label carefully and identify the exact product name.',
             'Also extract brand, net weight, visible SKU/barcode text, flavor, packaging, pack quantity, and useful label text.',
+            'For brand, return the exact visible brand even when it is new to the catalogue; a new brand may be created only when the admin publishes the product.',
             'For category, choose exactly one value from this existing category list: '.json_encode($availableCategories, JSON_UNESCAPED_UNICODE).'.',
             'Never invent, rename, broaden, or create a category. Return category as null when no listed category is a confident match.',
             'Use null when a value is not visible or uncertain; do not invent details.',

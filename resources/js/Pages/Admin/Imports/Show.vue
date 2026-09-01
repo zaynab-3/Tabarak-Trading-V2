@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, LoaderCircle } from '@lucide/vue';
+import { ArrowLeft, LoaderCircle, ShieldCheck } from '@lucide/vue';
 import { computed } from 'vue';
 import AiAnalyzerStatus from '@/Components/Admin/AiAnalyzerStatus.vue';
 import ImportAnalysisCard from '@/Components/Admin/ImportAnalysisCard.vue';
@@ -45,6 +45,10 @@ useImportBatchPolling(
         </PageHeader>
 
         <AiAnalyzerStatus :analyzer="analyzer" class="mb-5" />
+        <div class="mb-5 flex items-start gap-3 rounded-lg border border-tabarak-line bg-white p-4 text-sm leading-6 text-slate-600">
+            <ShieldCheck class="mt-0.5 size-5 shrink-0 text-tabarak-blue" />
+            <p><strong class="text-tabarak-ink">Taxonomy rule:</strong> a detected brand can be created when the product is published. Categories are never created by AI; it can only select an active existing category or leave the product uncategorized for admin review.</p>
+        </div>
         <div
             v-if="batch.processed_items < batch.total_items"
             class="mb-5 flex items-center gap-3 rounded-lg border border-tabarak-line bg-tabarak-mist p-4 text-sm font-semibold text-tabarak-blue"

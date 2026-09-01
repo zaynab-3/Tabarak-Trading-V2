@@ -14,6 +14,7 @@ const form = useForm({
     weight_value: props.product?.weight_value ?? '',
     weight_unit: props.product?.weight_unit ?? '',
     pack_quantity: props.product?.pack_quantity ?? '',
+    allows_open_quantity: props.product?.allows_open_quantity ?? false,
     unit_label: props.product?.unit_label ?? 'case',
     status: props.product?.status ?? 'draft',
     is_featured: props.product?.is_featured ?? false,
@@ -40,7 +41,19 @@ const submit = () => {
         </section>
 
         <aside class="space-y-5">
-            <section class="surface p-5"><h2 class="font-display text-xl font-bold text-forest-900">Pack details</h2><div class="mt-4 grid grid-cols-2 gap-3"><label><span class="field-label">Weight</span><input v-model="form.weight_value" class="field-input" min="0" step="0.01" type="number" /></label><label><span class="field-label">Unit</span><select v-model="form.weight_unit" class="field-input"><option value="">—</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">l</option><option value="oz">oz</option></select></label><label><span class="field-label">Pack quantity</span><input v-model="form.pack_quantity" class="field-input" min="1" type="number" /></label><label><span class="field-label">Pack label</span><input v-model="form.unit_label" class="field-input" placeholder="case" /></label></div></section>
+            <section class="surface p-5">
+                <h2 class="font-display text-xl font-bold text-forest-900">Pack details</h2>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                    <label><span class="field-label">Weight</span><input v-model="form.weight_value" class="field-input" min="0" step="0.01" type="number" /></label>
+                    <label><span class="field-label">Unit</span><select v-model="form.weight_unit" class="field-input"><option value="">—</option><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option><option value="l">l</option><option value="oz">oz</option></select></label>
+                    <label><span class="field-label">Pack quantity</span><input v-model="form.pack_quantity" class="field-input" min="1" type="number" /></label>
+                    <label><span class="field-label">Pack label</span><input v-model="form.unit_label" class="field-input" placeholder="case" /></label>
+                </div>
+                <label class="mt-4 flex min-h-11 items-start gap-3 border-t border-oat-200 pt-4">
+                    <input v-model="form.allows_open_quantity" type="checkbox" class="mt-0.5 rounded border-oat-300 text-forest-800 focus:ring-forest-700" />
+                    <span><span class="block text-sm font-bold text-forest-900">Open quantity</span><span class="mt-1 block text-xs leading-5 text-slate-500">Allow customers to request any quantity instead of a full case only.</span></span>
+                </label>
+            </section>
             <section class="surface p-5"><label class="flex min-h-11 items-center gap-3"><input v-model="form.is_featured" type="checkbox" class="rounded border-oat-300 text-forest-800 focus:ring-forest-700" /><span><span class="block text-sm font-bold text-forest-900">Featured product</span><span class="block text-xs text-slate-500">Show prominently on the storefront.</span></span></label></section>
             <div class="flex gap-2"><Link :href="route('admin.products.index')" class="btn-secondary flex-1">Cancel</Link><button class="btn-primary flex-1" type="submit" :disabled="form.processing"><Save class="size-4" /> {{ form.processing ? 'Saving…' : 'Save' }}</button></div>
         </aside>

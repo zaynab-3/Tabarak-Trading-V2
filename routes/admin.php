@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ImportBatchController;
 use App\Http\Controllers\Admin\ImportBatchAnalysisController;
 use App\Http\Controllers\Admin\ImportBatchImageController;
+use App\Http\Controllers\Admin\ImportBatchPublicationController;
+use App\Http\Controllers\Admin\ImportItemPublicationController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductImageController;
@@ -23,7 +25,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/logout', [AdminSessionController::class, 'destroy'])->name('logout');
         Route::get('/', DashboardController::class)->name('dashboard');
 
-        Route::resource('products', ProductController::class)->except(['show', 'destroy']);
+        Route::resource('products', ProductController::class)->except(['show']);
         Route::patch('/products/{product}/archive', [ProductController::class, 'archive'])->name('products.archive');
         Route::patch('/products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');
         Route::post('/products/{product}/images', [ProductImageController::class, 'store'])->name('products.images.store');
@@ -39,6 +41,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('imports', ImportBatchController::class)->parameters(['imports' => 'importBatch'])->only(['index', 'store', 'show']);
         Route::post('/imports/{importBatch}/images', [ImportBatchImageController::class, 'store'])->name('imports.images.store');
         Route::post('/imports/{importBatch}/analysis', [ImportBatchAnalysisController::class, 'store'])->name('imports.analysis.store');
+        Route::post('/imports/{importBatch}/publish', [ImportBatchPublicationController::class, 'store'])->name('imports.publish.store');
+        Route::post('/imports/{importBatch}/items/{importItem}/publish', [ImportItemPublicationController::class, 'store'])->name('imports.items.publish.store');
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     });

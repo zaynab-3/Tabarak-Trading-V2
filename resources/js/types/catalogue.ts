@@ -34,6 +34,7 @@ export interface Product {
     weight_value: string | number | null;
     weight_unit: string | null;
     pack_quantity: number | null;
+    allows_open_quantity: boolean;
     unit_label: string | null;
     status: 'draft' | 'published' | 'archived';
     is_featured: boolean;
@@ -69,6 +70,7 @@ export interface Paginated<T> { data: T[]; links: PaginationLink[]; current_page
 
 export interface ImportItem {
     id: number;
+    import_batch_id: number;
     status: string;
     suggested_name: string | null;
     suggested_brand: string | null;
@@ -78,6 +80,8 @@ export interface ImportItem {
     warnings: string[] | null;
     suggested_metadata: Record<string, string | null> | null;
     media: MediaItem;
+    approved_product_id: number | null;
+    approved_product?: Pick<Product, 'id' | 'name' | 'slug'> | null;
 }
 
 export interface ProductImageAnalyzerStatus {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Products\ArchiveProduct;
 use App\Actions\Products\CreateProduct;
+use App\Actions\Products\DeleteProduct;
 use App\Actions\Products\UpdateProduct;
 use App\DTOs\ProductData;
 use App\Enums\ProductStatus;
@@ -80,6 +81,15 @@ class ProductController extends Controller
         $product->update(['status' => ProductStatus::Draft, 'published_at' => null]);
 
         return back()->with('success', 'Product restored as a draft.');
+    }
+
+    public function destroy(Product $product, DeleteProduct $action): RedirectResponse
+    {
+        Gate::authorize('delete', $product);
+        $name = $product->name;
+        $action->handle($product);
+
+        return back()->with('success', "$name permanently deleted.");
     }
 
     /** @return array<string, mixed> */

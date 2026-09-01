@@ -7,10 +7,8 @@ import SearchBar from '@/Components/Storefront/SearchBar.vue';
 
 const open = ref(false);
 const links = [
-    { label: 'Home', routeName: 'home' },
     { label: 'Shop', routeName: 'shop' },
-    { label: 'Categories', routeName: 'categories.index' },
-    { label: 'Brands', routeName: 'brands.index' },
+    { label: 'Admin login', routeName: 'admin.login' },
 ];
 </script>
 
@@ -20,7 +18,7 @@ const links = [
             Wholesale catalogue · Lebanon
         </div>
         <div class="page-shell flex min-h-20 items-center gap-5">
-            <Link :href="route('home')" aria-label="Tabarak Trading home"><BrandMark /></Link>
+            <Link :href="route('shop')" aria-label="Tabarak Trading shop"><BrandMark /></Link>
             <nav class="ml-auto hidden items-center gap-1 md:flex" aria-label="Primary navigation">
                 <Link v-for="link in links" :key="link.routeName" :href="route(link.routeName)" class="rounded-md px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-oat-100 hover:text-forest-900" :class="route().current(link.routeName) ? 'bg-oat-100 text-forest-900' : ''">{{ link.label }}</Link>
             </nav>

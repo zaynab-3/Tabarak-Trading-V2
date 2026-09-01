@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft, LoaderCircle } from '@lucide/vue';
+import { computed } from 'vue';
 import AiAnalyzerStatus from '@/Components/Admin/AiAnalyzerStatus.vue';
 import ImportAnalysisCard from '@/Components/Admin/ImportAnalysisCard.vue';
 import PageHeader from '@/Components/Admin/PageHeader.vue';
+import PublishImportBatchButton from '@/Components/Admin/PublishImportBatchButton.vue';
 import ReanalyzeImportBatchButton from '@/Components/Admin/ReanalyzeImportBatchButton.vue';
 import { useImportBatchPolling } from '@/Composables/useImportBatchPolling';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -14,6 +16,10 @@ const props = defineProps<{
     analyzer: ProductImageAnalyzerStatus;
     canReanalyze: boolean;
 }>();
+
+const publishableCount = computed(() => props.batch.items?.filter(
+    (item) => item.status === 'review' && item.suggested_name && !item.approved_product_id,
+).length ?? 0);
 
 useImportBatchPolling(
     () => props.batch.total_items > 0 && props.batch.processed_items < props.batch.total_items,
@@ -29,6 +35,7 @@ useImportBatchPolling(
             :description="`${batch.processed_items} of ${batch.total_items} images analyzed or prepared for review.`"
         >
             <div class="flex flex-wrap items-center gap-2">
+                <PublishImportBatchButton v-if="publishableCount" :batch-id="batch.id" :count="publishableCount" />
                 <ReanalyzeImportBatchButton v-if="canReanalyze" :batch-id="batch.id" />
                 <Link :href="route('admin.imports.index')" class="btn-secondary">
                     <ArrowLeft class="size-4" /> All batches

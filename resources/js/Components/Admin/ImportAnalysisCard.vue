@@ -1,8 +1,28 @@
 <script setup lang="ts">
+import { Link, useForm } from '@inertiajs/vue3';
+import { ExternalLink, Send } from '@lucide/vue';
 import StatusBadge from '@/Components/Admin/StatusBadge.vue';
 import type { ImportItem } from '@/types/catalogue';
 
-defineProps<{ item: ImportItem }>();
+const props = defineProps<{ item: ImportItem }>();
+
+const detectedPackQuantity = () => {
+    const value = props.item.suggested_metadata?.pack_quantity;
+    const match = String(value ?? '').match(/\d+/);
+
+    return match ? Number(match[0]) : '';
+};
+
+const form = useForm({
+    name: props.item.suggested_name ?? '',
+    pack_quantity: detectedPackQuantity(),
+    allows_open_quantity: false,
+});
+
+const publish = () => form.post(
+    route('admin.imports.items.publish.store', [props.item.import_batch_id, props.item.id]),
+    { preserveScroll: true },
+);
 
 const confidenceLabel = (confidence: string | null) => {
     if (!confidence) {
@@ -47,6 +67,28 @@ const confidenceLabel = (confidence: string | null) => {
             <p v-if="item.warnings?.length" class="mt-3 border-l-2 border-saffron-500 pl-3 text-xs leading-5 text-slate-600">
                 {{ item.warnings.join(' ') }}
             </p>
+            <form v-if="item.status === 'review' && item.suggested_name" class="mt-4 space-y-3 border-t border-oat-200 pt-4" @submit.prevent="publish">
+                <label class="block">
+                    <span class="field-label">Product name</span>
+                    <input v-model="form.name" class="field-input" maxlength="180" required />
+                    <span v-if="form.errors.name" class="mt-1 block text-xs text-red-600">{{ form.errors.name }}</span>
+                </label>
+                <div class="grid grid-cols-[1fr_auto] gap-3">
+                    <label class="block">
+                        <span class="field-label">Pack quantity</span>
+                        <input v-model="form.pack_quantity" class="field-input" min="1" type="number" placeholder="Optional" />
+                    </label>
+                    <label class="flex items-end gap-2 pb-3 text-xs font-bold text-forest-900">
+                        <input v-model="form.allows_open_quantity" type="checkbox" class="rounded border-oat-300 text-forest-800 focus:ring-forest-700" /> Open quantity
+                    </label>
+                </div>
+                <button class="btn-primary w-full" type="submit" :disabled="form.processing">
+                    <Send class="size-4" /> {{ form.processing ? 'Publishing…' : 'Publish to shop' }}
+                </button>
+            </form>
+            <Link v-if="item.status === 'approved' && item.approved_product" :href="route('admin.products.edit', item.approved_product.slug)" class="btn-secondary mt-4 w-full">
+                Edit published product <ExternalLink class="size-4" />
+            </Link>
         </div>
     </article>
 </template>

@@ -18,6 +18,7 @@ class ProductPresenter
             'weight_value' => $product->weight_value,
             'weight_unit' => $product->weight_unit,
             'pack_quantity' => $product->pack_quantity,
+            'allows_open_quantity' => $product->allows_open_quantity,
             'unit_label' => $product->unit_label,
             'status' => $product->status->value,
             'is_featured' => $product->is_featured,

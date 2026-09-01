@@ -28,10 +28,10 @@ php artisan key:generate
 npm install
 ```
 
-Create an empty database named `tabarak_trading_v2`, then update the `DB_*` values in `.env` if your local database credentials differ from the defaults.
+Create an empty database named `tabarak_trading_catalogue_v2`, then update the `DB_*` values in `.env` if your local database credentials differ from the defaults.
 
 ```sql
-CREATE DATABASE tabarak_trading_v2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE tabarak_trading_catalogue_v2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 Create the schema and development catalogue:

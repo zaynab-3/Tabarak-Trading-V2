@@ -32,8 +32,7 @@ export async function svgToPng(file: File): Promise<File> {
             throw new Error('This browser could not prepare the SVG image.');
         }
 
-        context.fillStyle = '#ffffff';
-        context.fillRect(0, 0, width, height);
+        context.clearRect(0, 0, width, height);
         context.drawImage(image, 0, 0, width, height);
 
         const png = await canvasToBlob(canvas);

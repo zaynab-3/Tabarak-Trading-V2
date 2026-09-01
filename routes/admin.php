@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ImportBatchController;
+use App\Http\Controllers\Admin\ImportBatchAnalysisController;
 use App\Http\Controllers\Admin\ImportBatchImageController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\ProductController;
@@ -37,6 +38,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('media', MediaController::class)->only(['index', 'store', 'destroy']);
         Route::resource('imports', ImportBatchController::class)->parameters(['imports' => 'importBatch'])->only(['index', 'store', 'show']);
         Route::post('/imports/{importBatch}/images', [ImportBatchImageController::class, 'store'])->name('imports.images.store');
+        Route::post('/imports/{importBatch}/analysis', [ImportBatchAnalysisController::class, 'store'])->name('imports.analysis.store');
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     });

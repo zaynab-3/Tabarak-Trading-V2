@@ -4,6 +4,7 @@ import { ArrowLeft, LoaderCircle } from '@lucide/vue';
 import AiAnalyzerStatus from '@/Components/Admin/AiAnalyzerStatus.vue';
 import ImportAnalysisCard from '@/Components/Admin/ImportAnalysisCard.vue';
 import PageHeader from '@/Components/Admin/PageHeader.vue';
+import ReanalyzeImportBatchButton from '@/Components/Admin/ReanalyzeImportBatchButton.vue';
 import { useImportBatchPolling } from '@/Composables/useImportBatchPolling';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import type { ImportBatch, ProductImageAnalyzerStatus } from '@/types/catalogue';
@@ -11,6 +12,7 @@ import type { ImportBatch, ProductImageAnalyzerStatus } from '@/types/catalogue'
 const props = defineProps<{
     batch: ImportBatch;
     analyzer: ProductImageAnalyzerStatus;
+    canReanalyze: boolean;
 }>();
 
 useImportBatchPolling(
@@ -26,9 +28,12 @@ useImportBatchPolling(
             :title="batch.name || `Import #${batch.id}`"
             :description="`${batch.processed_items} of ${batch.total_items} images analyzed or prepared for review.`"
         >
-            <Link :href="route('admin.imports.index')" class="btn-secondary">
-                <ArrowLeft class="size-4" /> All batches
-            </Link>
+            <div class="flex flex-wrap items-center gap-2">
+                <ReanalyzeImportBatchButton v-if="canReanalyze" :batch-id="batch.id" />
+                <Link :href="route('admin.imports.index')" class="btn-secondary">
+                    <ArrowLeft class="size-4" /> All batches
+                </Link>
+            </div>
         </PageHeader>
 
         <AiAnalyzerStatus :analyzer="analyzer" class="mb-5" />

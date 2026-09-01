@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Imports\CreateImportBatch;
+use App\Enums\ImportItemStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Imports\StoreImportBatchRequest;
 use App\Models\ImportBatch;
@@ -52,6 +53,10 @@ class ImportBatchController extends Controller
         return Inertia::render('Admin/Imports/Show', [
             'batch' => $importBatch,
             'analyzer' => $this->importConfig()['analyzer'],
+            'canReanalyze' => $this->importConfig()['analyzer']['enabled'] && $importBatch->items->contains(
+                fn ($item) => in_array($item->status, [ImportItemStatus::Review, ImportItemStatus::Failed], true)
+                    && $item->approved_product_id === null,
+            ),
         ]);
     }
 

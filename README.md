@@ -146,6 +146,8 @@ php artisan queue:work --tries=3 --timeout=120
 
 Never commit `.env` or expose the key to Vue/browser code. The provider returns product name, brand, category, weight, label text, SKU/barcode, flavor, packaging, pack quantity, description, confidence, and warnings. Results are drafts only and are never published automatically. The approval and transactional product-creation step remains the next workflow phase.
 
+If a batch was processed while the placeholder analyzer was active, open its review page and click **Run Gemini analysis**. Eligible manual-review items are reset and queued without uploading the images again.
+
 ## Security notes
 
 - Public registration and customer authentication routes are intentionally absent.

@@ -8,6 +8,7 @@ import { computed } from 'vue';
 const props = defineProps<{ item: CartItem }>();
 const form = useForm({ quantity: props.item.quantity });
 const cartError = computed(() => (form.errors as Record<string, string>).cart);
+const maximumQuantity = computed(() => props.item.product.tracks_stock ? Math.max(1, props.item.product.stock_quantity ?? 0) : 999);
 
 const update = () => form.patch(route('cart.items.update', props.item.product.slug), { preserveScroll: true });
 const remove = () => router.delete(route('cart.items.destroy', props.item.product.slug), { preserveScroll: true });
@@ -30,9 +31,10 @@ const remove = () => router.delete(route('cart.items.destroy', props.item.produc
             </div>
             <div class="mt-5 flex flex-wrap items-end justify-between gap-4 border-t border-tabarak-line pt-4">
                 <form class="flex items-end gap-2" @submit.prevent="update">
-                    <label><span class="field-label">Quantity</span><input v-model.number="form.quantity" class="field-input w-24" type="number" min="1" max="999" required /></label>
+                    <label><span class="field-label">Quantity</span><input v-model.number="form.quantity" class="field-input w-24" type="number" min="1" :max="maximumQuantity" required /></label>
                     <button class="btn-secondary px-4" type="submit" :disabled="form.processing || form.quantity === item.quantity">Update</button>
                 </form>
+                <p v-if="item.product.tracks_stock" class="text-xs font-semibold text-slate-500">{{ item.product.stock_quantity }} currently available</p>
                 <div class="text-right">
                     <p class="text-xs text-slate-500">{{ formatMoney(item.unit_price) }} each</p>
                     <p class="mt-1 text-xl font-bold text-tabarak-blue">{{ formatMoney(item.line_total) }}</p>

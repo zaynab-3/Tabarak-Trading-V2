@@ -83,7 +83,7 @@ const restore = (product: Product) => router.patch(route('admin.products.restore
                             <p class="mt-1 text-xs text-slate-400">{{ product.category?.name || 'Uncategorized' }}</p>
                         </td>
                         <td class="hidden px-4 py-3 text-slate-600 xl:table-cell">{{ productPackLabel(product) }}</td>
-                        <td class="px-4 py-3 font-bold text-tabarak-ink">{{ product.unit_price ? formatMoney(product.unit_price) : 'Not priced' }}</td>
+                        <td class="px-4 py-3"><p class="font-bold text-tabarak-ink">{{ product.unit_price ? formatMoney(product.unit_price) : 'Not priced' }}</p><p class="mt-1 text-xs" :class="product.is_available ? 'text-slate-400' : 'font-bold text-red-600'">{{ product.allows_open_quantity ? 'Open quantity' : product.stock_quantity === null ? 'Stock not tracked' : `${product.stock_quantity} in stock` }}</p></td>
                         <td class="px-4 py-3"><StatusBadge :status="product.status" /></td>
                         <td class="hidden px-4 py-3 text-slate-500 2xl:table-cell">{{ formatDate(product.updated_at) }}</td>
                         <td class="px-4 py-3">

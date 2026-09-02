@@ -2,7 +2,7 @@
 
 Tabarak Trading V2 is a fresh wholesale food catalogue and administration platform. It provides a public product catalogue, protected administration, reusable media handling, and a human-reviewed AI-assisted bulk image import workflow.
 
-This repository is independent from every previous Tabarak Trading codebase. It does not include checkout, payments, customer accounts, live inventory, or deployment configuration. Gemini image analysis is optional and disabled until a server-side API key is configured.
+This repository is independent from every previous Tabarak Trading codebase. It includes a USD cart and invoice workflow, transactional stock reservation, deletion audit notices, and an AI-to-OCR-to-manual bulk import workflow. It does not process online payments or provide customer accounts.
 
 ## Stack
 
@@ -18,6 +18,9 @@ This repository is independent from every previous Tabarak Trading codebase. It 
 - Composer 2
 - Node.js 20+ and npm
 - MySQL 8+ or MariaDB 10.4+
+- Optional: Tesseract OCR installed on the server for free local OCR fallback
+
+Install Tesseract with `sudo apt-get install tesseract-ocr` on Ubuntu/Debian. On Windows, install a Tesseract OCR distribution and set `OCR_TESSERACT_BINARY` to its full executable path when it is outside the system PATH.
 
 ## Installation
 
@@ -73,6 +76,22 @@ Then open `http://127.0.0.1:8001` or `http://127.0.0.1:8001/admin/login`.
 npm run build
 ```
 
+For production deployment, also migrate the database, cache configuration, and keep a queue worker running:
+
+```bash
+php artisan migrate --force
+php artisan optimize
+php artisan queue:work --tries=3 --timeout=120
+```
+
+On shared hosting without a persistent worker, schedule `php artisan queue:work --stop-when-empty --tries=3 --timeout=120` every minute. Without a queue worker, uploaded images remain queued and neither AI nor OCR analysis will start.
+
+Check the configured fallback chain without spending an AI request:
+
+```bash
+php artisan imports:diagnose
+```
+
 ## Tests and formatting
 
 The automated suite uses an in-memory SQLite database. It never resets the configured local MySQL database.
@@ -114,9 +133,10 @@ Routes are split between `routes/storefront.php` and `routes/admin.php`, with `r
 The application tables are:
 
 - `users`, `password_reset_tokens`, and `sessions`
-- `categories`, `brands`, `products`, and `product_variants`
+- `categories`, `brands`, `products`, and `product_variants`, including optional tracked stock
 - `media` and `product_images`
 - `import_batches` and `import_items`
+- `orders`, `order_items`, and permanent `order_deletion_notices`
 - `settings`
 - Laravel `cache`, `jobs`, `job_batches`, and `failed_jobs` tables
 
@@ -128,12 +148,15 @@ Open **Admin → Bulk Import**, choose any practical number of images in one sel
 
 Each selected image may be JPG, PNG, WebP, or SVG and is limited to 8 MB by default. SVG files are sanitized and rasterized to PNG in the administrator's browser before upload so executable SVG markup is never stored or sent to the analyzer. Change `IMPORT_UPLOAD_CHUNK_SIZE` or `IMPORT_IMAGE_MAX_SIZE_KB` when the server environment needs different limits.
 
-Automatic analysis needs a Gemini API key. Create a free-tier key in [Google AI Studio](https://aistudio.google.com/apikey) and place it only in the local `.env` file:
+Automatic analysis can use a Gemini API key as its primary detector. Create a free-tier key in [Google AI Studio](https://aistudio.google.com/apikey) and place it only in the server `.env` file:
 
 ```dotenv
 PRODUCT_IMAGE_ANALYZER=gemini
 GEMINI_API_KEY=your_server_side_api_key
 GEMINI_VISION_MODEL=gemini-3.5-flash-lite
+OCR_ENABLED=true
+OCR_TESSERACT_BINARY=tesseract
+OCR_LANGUAGE=eng
 ```
 
 Then reload configuration and restart long-running queue workers:
@@ -144,9 +167,9 @@ php artisan queue:restart
 php artisan queue:work --tries=3 --timeout=120
 ```
 
-Never commit `.env` or expose the key to Vue/browser code. The provider returns product name, brand, category, weight, label text, SKU/barcode, flavor, packaging, pack quantity, description, confidence, and warnings. Results are drafts only and are never published automatically. The approval and transactional product-creation step remains the next workflow phase.
+Never commit `.env` or expose the key to Vue/browser code. The fallback sequence is primary AI, local Tesseract OCR, then manual admin review. Provider errors do not delete or reject the uploaded image. Results are drafts only and are never published automatically.
 
-If a batch was processed while the placeholder analyzer was active, open its review page and click **Run Gemini analysis**. Eligible manual-review items are reset and queued without uploading the images again.
+If a batch was processed before analysis was configured, open its review page and click **Run analysis again**. Eligible manual-review items are reset and queued without uploading the images again.
 
 ## Security notes
 

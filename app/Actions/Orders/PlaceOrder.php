@@ -4,10 +4,13 @@ namespace App\Actions\Orders;
 
 use App\DTOs\CartLineData;
 use App\Enums\OrderStatus;
+use App\Enums\ProductStatus;
 use App\Models\Order;
+use App\Models\Product;
 use App\Services\Cart\CartService;
 use App\Services\Orders\OrderItemImageSnapshot;
 use App\Services\Orders\OrderNumberGenerator;
+use App\Services\Products\ProductInventory;
 use App\Support\Money;
 use App\Support\ProductPackLabel;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +25,7 @@ class PlaceOrder
         private readonly CartService $cart,
         private readonly OrderNumberGenerator $numbers,
         private readonly OrderItemImageSnapshot $images,
+        private readonly ProductInventory $inventory,
     ) {}
 
     public function handle(string $customerName, string $customerPhone): Order
@@ -35,7 +39,34 @@ class PlaceOrder
 
         try {
             $order = DB::transaction(function () use ($customerName, $customerPhone, $lines, $token): Order {
-                $subtotalCents = $lines->sum(fn (CartLineData $line) => $line->lineTotalCents);
+                $products = Product::query()
+                    ->whereKey($lines->map(fn (CartLineData $line) => $line->product->id))
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+                $preparedLines = $lines->map(function (CartLineData $line) use ($products): array {
+                    /** @var Product|null $product */
+                    $product = $products->get($line->product->id);
+
+                    if (! $product
+                        || $product->status !== ProductStatus::Published
+                        || ! $product->published_at?->isPast()
+                        || $product->unit_price === null
+                        || Money::toCents($product->unit_price) < 1) {
+                        throw ValidationException::withMessages(['cart' => $line->product->name.' is no longer available to order.']);
+                    }
+
+                    $this->inventory->assertAvailable($product, $line->quantity);
+                    $unitPriceCents = Money::toCents($product->unit_price);
+
+                    return [
+                        'product' => $product,
+                        'quantity' => $line->quantity,
+                        'unit_price_cents' => $unitPriceCents,
+                        'line_total_cents' => $unitPriceCents * $line->quantity,
+                    ];
+                });
+                $subtotalCents = $preparedLines->sum('line_total_cents');
                 $order = Order::query()->create([
                     'order_number' => $this->numbers->generate(),
                     'public_token' => $token,
@@ -48,16 +79,20 @@ class PlaceOrder
                     'submitted_at' => now(),
                 ]);
 
-                $lines->each(function (CartLineData $line) use ($order, $token): void {
+                $preparedLines->each(function (array $line) use ($order, $token): void {
+                    /** @var Product $product */
+                    $product = $line['product'];
+                    $stockReserved = $this->inventory->reserve($product, $line['quantity']);
                     $order->items()->create([
-                        'product_id' => $line->product->id,
-                        'product_name' => $line->product->name,
-                        'product_sku' => $line->product->sku,
-                        'pack_label' => ProductPackLabel::for($line->product),
-                        ...$this->images->store($line->product, $token),
-                        'unit_price' => Money::fromCents($line->unitPriceCents),
-                        'quantity' => $line->quantity,
-                        'line_total' => Money::fromCents($line->lineTotalCents),
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'product_sku' => $product->sku,
+                        'pack_label' => ProductPackLabel::for($product),
+                        ...$this->images->store($product, $token),
+                        'unit_price' => Money::fromCents($line['unit_price_cents']),
+                        'quantity' => $line['quantity'],
+                        'stock_reserved' => $stockReserved,
+                        'line_total' => Money::fromCents($line['line_total_cents']),
                     ]);
                 });
 

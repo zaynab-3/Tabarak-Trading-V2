@@ -36,7 +36,6 @@ class GeminiProductImageAnalyzer implements ProductImageAnalyzerInterface
             ->acceptJson()
             ->asJson()
             ->timeout((int) config('imports.gemini.timeout'))
-            ->retry(2, 750, throw: false)
             ->post('/models/'.rawurlencode($model).':generateContent', [
                 'contents' => [[
                     'role' => 'user',

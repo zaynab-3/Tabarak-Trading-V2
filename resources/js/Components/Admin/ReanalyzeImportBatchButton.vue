@@ -11,6 +11,6 @@ const submit = () => form.post(route('admin.imports.analysis.store', props.batch
     <button class="btn-primary" type="button" :disabled="form.processing" @click="submit">
         <LoaderCircle v-if="form.processing" class="size-4 animate-spin" />
         <Sparkles v-else class="size-4" />
-        {{ form.processing ? 'Queueing…' : 'Run Gemini analysis' }}
+        {{ form.processing ? 'Queueing…' : 'Run analysis again' }}
     </button>
 </template>

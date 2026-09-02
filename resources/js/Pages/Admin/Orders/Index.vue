@@ -2,7 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Check, Eye, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
-import ConfirmDialog from '@/Components/Shared/ConfirmDialog.vue';
+import DeleteOrderDialog from '@/Components/Admin/DeleteOrderDialog.vue';
 import DataTable from '@/Components/Admin/DataTable.vue';
 import OrderFilters from '@/Components/Admin/OrderFilters.vue';
 import PageHeader from '@/Components/Admin/PageHeader.vue';
@@ -15,15 +15,7 @@ import { formatDateTime, formatMoney } from '@/Utils/format';
 
 defineProps<{ orders: Paginated<Order>; filters: Filters; statuses: string[] }>();
 const pendingDelete = ref<Order | null>(null);
-const deleteProcessing = ref(false);
 const complete = (order: Order) => router.patch(route('admin.orders.complete', order.public_token), {}, { preserveScroll: true });
-const confirmDelete = () => {
-    if (!pendingDelete.value) return;
-    deleteProcessing.value = true;
-    router.delete(route('admin.orders.destroy', pendingDelete.value.public_token), {
-        onFinish: () => { deleteProcessing.value = false; pendingDelete.value = null; },
-    });
-};
 </script>
 
 <template>
@@ -48,14 +40,6 @@ const confirmDelete = () => {
             </DataTable>
         </div>
         <div class="mt-7"><Pagination :links="orders.links" /></div>
-        <ConfirmDialog
-            :open="Boolean(pendingDelete)"
-            title="Delete order and invoice?"
-            :description="`${pendingDelete?.order_number || 'This order'} and its saved invoice images will be permanently deleted. This cannot be undone.`"
-            confirm-label="Delete order"
-            :processing="deleteProcessing"
-            @cancel="pendingDelete = null"
-            @confirm="confirmDelete"
-        />
+        <DeleteOrderDialog :open="Boolean(pendingDelete)" :order="pendingDelete" @close="pendingDelete = null" @finished="pendingDelete = null" />
     </AdminLayout>
 </template>

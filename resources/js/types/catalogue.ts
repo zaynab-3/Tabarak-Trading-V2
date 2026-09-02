@@ -40,6 +40,9 @@ export interface Product {
     weight_unit: string | null;
     pack_quantity: number | null;
     allows_open_quantity: boolean;
+    stock_quantity: number | null;
+    tracks_stock: boolean;
+    is_available: boolean;
     unit_label: string | null;
     unit_price: string | number | null;
     currency: 'USD';

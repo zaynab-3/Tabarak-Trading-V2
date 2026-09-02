@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Imports\StoreImportBatchRequest;
 use App\Models\ImportBatch;
 use App\Models\Category;
+use App\Services\Imports\OcrProductImageAnalyzer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -16,6 +17,8 @@ use Inertia\Response;
 
 class ImportBatchController extends Controller
 {
+    public function __construct(private readonly OcrProductImageAnalyzer $ocr) {}
+
     public function index(): Response
     {
         Gate::authorize('viewAny', ImportBatch::class);
@@ -70,21 +73,30 @@ class ImportBatchController extends Controller
     private function importConfig(): array
     {
         $driver = (string) config('imports.analyzer');
-        $enabled = match ($driver) {
+        $primaryEnabled = match ($driver) {
             'gemini' => filled(config('imports.gemini.api_key')),
             'openai' => filled(config('imports.openai.api_key')),
             default => false,
         };
-        $provider = match ($driver) {
+        $ocrEnabled = $this->ocr->available();
+        $enabled = $primaryEnabled || $ocrEnabled;
+        $primaryProvider = match ($driver) {
             'gemini' => 'Google Gemini',
             'openai' => 'OpenAI',
             default => 'Manual review',
         };
-        $model = match ($driver) {
+        $provider = match (true) {
+            $primaryEnabled && $ocrEnabled => $primaryProvider.' with local OCR fallback',
+            $primaryEnabled => $primaryProvider,
+            $ocrEnabled => 'Local OCR with manual fallback',
+            default => 'Manual review',
+        };
+        $primaryModel = match ($driver) {
             'gemini' => (string) config('imports.gemini.model'),
             'openai' => (string) config('imports.openai.model'),
             default => null,
         };
+        $model = $primaryEnabled ? $primaryModel : ($ocrEnabled ? 'Tesseract '.config('imports.ocr.language') : null);
 
         return [
             'upload_chunk_size' => (int) config('imports.upload_chunk_size'),
@@ -93,7 +105,7 @@ class ImportBatchController extends Controller
                 'driver' => $driver,
                 'enabled' => $enabled,
                 'provider' => $provider,
-                'model' => $enabled ? $model : null,
+                'model' => $model,
             ],
         ];
     }

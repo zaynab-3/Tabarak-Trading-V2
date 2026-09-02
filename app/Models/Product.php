@@ -17,7 +17,7 @@ class Product extends Model
     protected $fillable = [
         'category_id', 'brand_id', 'name', 'slug', 'normalized_name', 'sku',
         'description', 'short_description', 'weight_value', 'weight_unit',
-        'pack_quantity', 'allows_open_quantity', 'unit_label', 'unit_price', 'status', 'is_featured', 'published_at',
+        'pack_quantity', 'allows_open_quantity', 'stock_quantity', 'unit_label', 'unit_price', 'status', 'is_featured', 'published_at',
     ];
 
     protected function casts(): array
@@ -27,6 +27,7 @@ class Product extends Model
             'weight_value' => 'decimal:2',
             'unit_price' => 'decimal:2',
             'allows_open_quantity' => 'boolean',
+            'stock_quantity' => 'integer',
             'is_featured' => 'boolean',
             'published_at' => 'datetime',
         ];

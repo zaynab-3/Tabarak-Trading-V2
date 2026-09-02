@@ -6,6 +6,7 @@ use App\DTOs\CartLineData;
 use App\Enums\ProductStatus;
 use App\Models\Product;
 use App\Services\Products\ProductPresenter;
+use App\Services\Products\ProductInventory;
 use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -14,19 +15,25 @@ class CartService
 {
     private const SESSION_KEY = 'tabarak.cart';
 
-    public function __construct(private readonly ProductPresenter $products) {}
+    public function __construct(
+        private readonly ProductPresenter $products,
+        private readonly ProductInventory $inventory,
+    ) {}
 
     public function add(Product $product, int $quantity): void
     {
         $this->assertOrderable($product);
         $cart = $this->raw();
-        $cart[$product->id] = min(999, ($cart[$product->id] ?? 0) + $quantity);
+        $newQuantity = min(999, ($cart[$product->id] ?? 0) + $quantity);
+        $this->inventory->assertAvailable($product, $newQuantity);
+        $cart[$product->id] = $newQuantity;
         session()->put(self::SESSION_KEY, $cart);
     }
 
     public function update(Product $product, int $quantity): void
     {
         $this->assertOrderable($product);
+        $this->inventory->assertAvailable($product, $quantity);
         $cart = $this->raw();
         $cart[$product->id] = $quantity;
         session()->put(self::SESSION_KEY, $cart);
@@ -69,6 +76,12 @@ class CartService
                 continue;
             }
 
+            $maximum = $this->inventory->maximumOrderQuantity($product);
+            if ($maximum < 1) {
+                continue;
+            }
+
+            $quantity = min($quantity, $maximum);
             $validCart[$product->id] = $quantity;
             $unitPriceCents = Money::toCents($product->unit_price);
             $lines->push(new CartLineData(
@@ -124,5 +137,7 @@ class CartService
                 'cart' => 'This product is not currently available to order.',
             ]);
         }
+
+        $this->inventory->assertAvailable($product, 1);
     }
 }

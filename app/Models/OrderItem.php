@@ -13,7 +13,7 @@ class OrderItem extends Model
     protected $fillable = [
         'product_id', 'product_name', 'product_sku', 'pack_label',
         'image_disk', 'image_path', 'image_mime_type', 'image_alt_text',
-        'unit_price', 'quantity', 'line_total',
+        'unit_price', 'quantity', 'stock_reserved', 'line_total',
     ];
 
     protected function casts(): array
@@ -21,6 +21,7 @@ class OrderItem extends Model
         return [
             'unit_price' => 'decimal:2',
             'quantity' => 'integer',
+            'stock_reserved' => 'integer',
             'line_total' => 'decimal:2',
         ];
     }

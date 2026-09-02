@@ -22,6 +22,7 @@ trait ProductRules
             'weight_unit' => ['nullable', Rule::enum(WeightUnit::class)],
             'pack_quantity' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'allows_open_quantity' => ['sometimes', 'boolean'],
+            'stock_quantity' => ['nullable', 'integer', 'min:0', 'max:100000000'],
             'unit_label' => ['nullable', 'string', 'max:50'],
             'unit_price' => ['nullable', 'numeric', 'min:0.01', 'max:9999999999.99'],
             'status' => ['required', Rule::enum(ProductStatus::class)],

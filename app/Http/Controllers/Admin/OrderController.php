@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Orders\CompleteOrder;
 use App\Actions\Orders\DeleteOrder;
+use App\Enums\OrderDeletionMode;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\OrderIndexRequest;
+use App\Http\Requests\Orders\DeleteOrderRequest;
 use App\Models\Order;
 use App\Services\Orders\OrderPresenter;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +24,7 @@ class OrderController extends Controller
         $filters = $request->validated();
         $orders = Order::query()
             ->withSum('items as items_count', 'quantity')
+            ->withSum('items as reserved_stock_quantity', 'stock_reserved')
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['search'] ?? null, function ($query, $search): void {
                 $query->where(function ($nested) use ($search): void {
@@ -58,12 +61,13 @@ class OrderController extends Controller
         return back()->with('success', $order->order_number.' marked completed.');
     }
 
-    public function destroy(Order $order, DeleteOrder $action): RedirectResponse
+    public function destroy(DeleteOrderRequest $request, Order $order, DeleteOrder $action): RedirectResponse
     {
         Gate::authorize('delete', $order);
         $number = $order->order_number;
-        $action->handle($order);
+        $mode = OrderDeletionMode::from((string) $request->validated('deletion_mode'));
+        $action->handle($order, $request->user(), $mode);
 
-        return redirect()->route('admin.orders.index')->with('success', $number.' deleted.');
+        return redirect()->route('admin.order-notices.index')->with('success', $number.' deleted and recorded in order notices.');
     }
 }

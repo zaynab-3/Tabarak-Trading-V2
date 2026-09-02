@@ -33,7 +33,6 @@ class OpenAiProductImageAnalyzer implements ProductImageAnalyzerInterface
             ->acceptJson()
             ->asJson()
             ->timeout((int) config('imports.openai.timeout'))
-            ->retry(2, 750, throw: false)
             ->post('/responses', $this->payload($image, $contents));
 
         if ($response->failed()) {

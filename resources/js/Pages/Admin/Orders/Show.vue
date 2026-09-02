@@ -2,7 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowLeft, Check, Download, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
-import ConfirmDialog from '@/Components/Shared/ConfirmDialog.vue';
+import DeleteOrderDialog from '@/Components/Admin/DeleteOrderDialog.vue';
 import PageHeader from '@/Components/Admin/PageHeader.vue';
 import StatusBadge from '@/Components/Admin/StatusBadge.vue';
 import OrderItemsList from '@/Components/Orders/OrderItemsList.vue';
@@ -13,14 +13,7 @@ import { formatDateTime } from '@/Utils/format';
 
 const props = defineProps<{ order: Order }>();
 const confirmingDelete = ref(false);
-const deleteProcessing = ref(false);
 const complete = () => router.patch(route('admin.orders.complete', props.order.public_token));
-const remove = () => {
-    deleteProcessing.value = true;
-    router.delete(route('admin.orders.destroy', props.order.public_token), {
-        onFinish: () => { deleteProcessing.value = false; confirmingDelete.value = false; },
-    });
-};
 </script>
 
 <template>
@@ -40,14 +33,6 @@ const remove = () => {
                 <OrderTotals :subtotal="order.subtotal" :total="order.total" />
             </aside>
         </div>
-        <ConfirmDialog
-            :open="confirmingDelete"
-            title="Delete order and invoice?"
-            :description="`${order.order_number} and its saved invoice images will be permanently deleted. This cannot be undone.`"
-            confirm-label="Delete order"
-            :processing="deleteProcessing"
-            @cancel="confirmingDelete = false"
-            @confirm="remove"
-        />
+        <DeleteOrderDialog :open="confirmingDelete" :order="order" @close="confirmingDelete = false" @finished="confirmingDelete = false" />
     </AdminLayout>
 </template>

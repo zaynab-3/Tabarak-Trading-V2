@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Boxes, Building2, ClipboardList, FolderTree, Images, Plus, SendToBack, Sparkles, UploadCloud } from '@lucide/vue';
+import { BellRing, Boxes, Building2, ClipboardList, FolderTree, Images, Plus, SendToBack, Sparkles, UploadCloud } from '@lucide/vue';
 import DataTable from '@/Components/Admin/DataTable.vue';
 import PageHeader from '@/Components/Admin/PageHeader.vue';
 import QuickActionCard from '@/Components/Admin/QuickActionCard.vue';
@@ -20,6 +20,7 @@ defineProps<{
         media: number;
         importsAwaitingReview: number;
         pendingOrders: number;
+        orderNotices: number;
     };
     recentProducts: Product[];
     recentImports: ImportBatch[];
@@ -39,7 +40,7 @@ defineProps<{
                 <h2 id="catalogue-health" class="text-sm font-bold text-tabarak-ink">Catalogue health</h2>
                 <span class="text-xs font-semibold text-slate-400">Live overview</span>
             </div>
-            <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-7">
+            <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-4 2xl:grid-cols-8">
                 <StatCard label="Pending orders" :value="stats.pendingOrders" :icon="ClipboardList" tone="orange" />
                 <StatCard label="Products" :value="stats.products" :icon="Boxes" />
                 <StatCard label="Published" :value="stats.published" :icon="SendToBack" tone="orange" />
@@ -47,6 +48,7 @@ defineProps<{
                 <StatCard label="Brands" :value="stats.brands" :icon="Building2" />
                 <StatCard label="Media" :value="stats.media" :icon="Images" />
                 <StatCard label="Import review" :value="stats.importsAwaitingReview" :icon="Sparkles" tone="orange" />
+                <StatCard label="Order notices" :value="stats.orderNotices" :icon="BellRing" />
             </div>
         </section>
 

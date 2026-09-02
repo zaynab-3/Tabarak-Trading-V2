@@ -28,6 +28,7 @@ const form = useForm({
     weight_unit: props.product?.weight_unit ?? '',
     pack_quantity: props.product?.pack_quantity ?? '',
     allows_open_quantity: props.product?.allows_open_quantity ?? false,
+    stock_quantity: props.product?.stock_quantity ?? '',
     unit_label: props.product?.unit_label ?? 'case',
     unit_price: props.product?.unit_price ?? '',
     status: props.product?.status ?? 'draft',
@@ -73,6 +74,12 @@ const submit = () => {
                 <label class="mt-4 flex min-h-11 items-start gap-3 border-t border-tabarak-line pt-4">
                     <input v-model="form.allows_open_quantity" type="checkbox" class="mt-0.5 rounded border-tabarak-line text-tabarak-blue focus:ring-tabarak-blue" />
                     <span><span class="block text-sm font-bold text-tabarak-ink">Open quantity</span><span class="mt-1 block text-xs leading-5 text-slate-500">Allow customers to request any quantity instead of a full case only.</span></span>
+                </label>
+                <label class="mt-4 block border-t border-tabarak-line pt-4">
+                    <span class="field-label">Available stock</span>
+                    <input v-model="form.stock_quantity" class="field-input" type="number" min="0" max="100000000" placeholder="Leave blank to not track" :disabled="form.allows_open_quantity" />
+                    <span v-if="form.errors.stock_quantity" class="mt-1 block text-xs text-red-600">{{ form.errors.stock_quantity }}</span>
+                    <span class="mt-1.5 block text-xs leading-5 text-slate-500">{{ form.allows_open_quantity ? 'Open-quantity products are not stock-limited.' : 'Orders reserve this quantity. Use 0 for out of stock, or leave blank when stock is not tracked.' }}</span>
                 </label>
             </section>
             <section class="surface p-5"><label class="flex min-h-11 items-center gap-3"><input v-model="form.is_featured" type="checkbox" class="rounded border-tabarak-line text-tabarak-blue focus:ring-tabarak-blue" /><span><span class="block text-sm font-bold text-tabarak-ink">Featured product</span><span class="block text-xs text-slate-500">Show prominently on the storefront.</span></span></label></section>

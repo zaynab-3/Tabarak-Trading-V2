@@ -21,6 +21,7 @@ class OrderPresenter
             'subtotal' => $order->subtotal,
             'total' => $order->total,
             'items_count' => (int) ($order->items_count ?? $order->items->sum('quantity')),
+            'reserved_stock_quantity' => (int) ($order->reserved_stock_quantity ?? $order->items->sum('stock_reserved')),
             'submitted_at' => $order->submitted_at?->toISOString(),
             'completed_at' => $order->completed_at?->toISOString(),
         ];
@@ -43,6 +44,7 @@ class OrderPresenter
                 'image_alt_text' => $item->image_alt_text,
                 'unit_price' => $item->unit_price,
                 'quantity' => $item->quantity,
+                'stock_reserved' => $item->stock_reserved,
                 'line_total' => $item->line_total,
             ])->values(),
         ];

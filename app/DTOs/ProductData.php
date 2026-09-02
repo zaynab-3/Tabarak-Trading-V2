@@ -18,6 +18,7 @@ readonly class ProductData
         public ?string $weightUnit,
         public ?int $packQuantity,
         public bool $allowsOpenQuantity,
+        public ?int $stockQuantity,
         public ?string $unitLabel,
         public ?float $unitPrice,
         public ProductStatus $status,
@@ -38,6 +39,9 @@ readonly class ProductData
             weightUnit: filled($data['weight_unit'] ?? null) ? (string) $data['weight_unit'] : null,
             packQuantity: filled($data['pack_quantity'] ?? null) ? (int) $data['pack_quantity'] : null,
             allowsOpenQuantity: (bool) ($data['allows_open_quantity'] ?? false),
+            stockQuantity: (bool) ($data['allows_open_quantity'] ?? false) || ! filled($data['stock_quantity'] ?? null)
+                ? null
+                : (int) $data['stock_quantity'],
             unitLabel: filled($data['unit_label'] ?? null) ? trim((string) $data['unit_label']) : null,
             unitPrice: filled($data['unit_price'] ?? null) ? (float) $data['unit_price'] : null,
             status: ProductStatus::from((string) $data['status']),
@@ -60,6 +64,7 @@ readonly class ProductData
             'weight_unit' => $this->weightUnit,
             'pack_quantity' => $this->packQuantity,
             'allows_open_quantity' => $this->allowsOpenQuantity,
+            'stock_quantity' => $this->stockQuantity,
             'unit_label' => $this->unitLabel,
             'unit_price' => $this->unitPrice,
             'status' => $this->status,

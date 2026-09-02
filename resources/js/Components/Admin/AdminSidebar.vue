@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Boxes, Building2, ClipboardList, FolderTree, Gauge, Images, Settings, Sparkles } from '@lucide/vue';
+import { BellRing, Boxes, Building2, ClipboardList, FolderTree, Gauge, Images, Settings, Sparkles } from '@lucide/vue';
 import type { Component } from 'vue';
 import BrandMark from '@/Components/Shared/BrandMark.vue';
 
@@ -29,7 +29,10 @@ const groups: NavigationGroup[] = [
     },
     {
         label: 'Sales',
-        items: [{ label: 'Orders', routeName: 'admin.orders.index', icon: ClipboardList }],
+        items: [
+            { label: 'Orders', routeName: 'admin.orders.index', icon: ClipboardList },
+            { label: 'Order notices', routeName: 'admin.order-notices.index', icon: BellRing },
+        ],
     },
     {
         label: 'Content',

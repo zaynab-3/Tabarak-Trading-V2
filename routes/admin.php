@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\ImportItemPublicationController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MediaOrderController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\OrderDeletionNoticeController;
+use App\Http\Controllers\Admin\OrderDeletionNoticeItemImageController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductImageController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -30,6 +32,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('products', ProductController::class)->except(['show']);
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
+        Route::resource('order-notices', OrderDeletionNoticeController::class)->only(['index', 'show']);
+        Route::get('/order-notices/{orderNotice}/items/{item}/image', OrderDeletionNoticeItemImageController::class)->name('order-notices.items.image');
         Route::patch('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
         Route::patch('/products/{product}/archive', [ProductController::class, 'archive'])->name('products.archive');
         Route::patch('/products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');

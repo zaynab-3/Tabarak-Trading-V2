@@ -23,4 +23,11 @@ return [
         'detail' => env('OPENAI_VISION_DETAIL', 'high'),
         'timeout' => (int) env('OPENAI_VISION_TIMEOUT', 90),
     ],
+
+    'ocr' => [
+        'enabled' => (bool) env('OCR_ENABLED', true),
+        'binary' => env('OCR_TESSERACT_BINARY', 'tesseract'),
+        'language' => env('OCR_LANGUAGE', 'eng'),
+        'timeout' => (int) env('OCR_TIMEOUT', 60),
+    ],
 ];

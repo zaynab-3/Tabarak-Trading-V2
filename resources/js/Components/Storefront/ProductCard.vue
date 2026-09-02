@@ -10,20 +10,20 @@ defineProps<{ product: Product }>();
 </script>
 
 <template>
-    <article class="group grid min-h-[260px] overflow-hidden rounded-lg border border-tabarak-line bg-white transition hover:border-tabarak-blue hover:shadow-[0_16px_38px_rgba(64,88,225,0.12)] sm:grid-cols-[46%_54%]">
-        <Link :href="route('products.show', product.slug)" class="relative flex min-h-52 items-center justify-center overflow-hidden bg-tabarak-mist p-5 sm:min-h-full">
-            <img v-if="product.primary_image" :src="product.primary_image.url" :alt="product.primary_image.alt_text || product.name" class="h-full max-h-56 w-full object-contain" loading="lazy" />
+    <article class="group flex min-h-[430px] flex-col overflow-hidden rounded-xl border border-[#E7EAF3] bg-white transition hover:border-tabarak-line hover:shadow-[0_10px_30px_rgba(21,24,42,0.07)]">
+        <Link :href="route('products.show', product.slug)" class="relative flex min-h-56 items-center justify-center overflow-hidden bg-tabarak-mist p-6">
+            <img v-if="product.primary_image" :src="product.primary_image.url" :alt="product.primary_image.alt_text || product.name" class="h-52 w-full object-contain transition duration-300 group-hover:scale-[1.03]" loading="lazy" />
             <div v-else class="flex h-full flex-col items-center justify-center gap-3 text-tabarak-blue">
                 <ImageIcon class="size-8" />
                 <span class="text-xs font-bold text-slate-500">Image coming soon</span>
             </div>
             <span v-if="product.is_featured" class="absolute left-3 top-3 rounded bg-tabarak-orange px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Featured</span>
         </Link>
-        <div class="flex min-w-0 flex-col p-5">
+        <div class="flex min-w-0 flex-1 flex-col p-5">
             <div class="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
                 <span>{{ product.brand?.name || 'Tabarak selection' }}</span><span aria-hidden="true">·</span><span>{{ product.category?.name || 'Catalogue' }}</span>
             </div>
-            <h3 class="font-display text-xl font-bold leading-tight text-tabarak-ink lg:text-2xl">
+            <h3 class="font-display text-lg font-semibold leading-snug text-tabarak-ink lg:text-xl">
                 <Link :href="route('products.show', product.slug)">{{ product.name }}</Link>
             </h3>
             <p class="mt-3 text-sm text-slate-500">{{ productPackLabel(product) }}</p>

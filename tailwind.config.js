@@ -14,7 +14,7 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
-                display: ['Georgia', 'Cambria', 'serif'],
+                display: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 forest: { 50: '#eef5f1', 100: '#dbe9e1', 600: '#1e5b45', 700: '#184b39', 800: '#12382b', 900: '#0b271e' },

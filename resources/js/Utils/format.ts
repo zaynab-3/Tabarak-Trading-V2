@@ -1,8 +1,8 @@
 export const formatDate = (value?: string | null): string =>
-    value ? new Intl.DateTimeFormat('en-LB', { dateStyle: 'medium' }).format(new Date(value)) : '—';
+    value ? new Intl.DateTimeFormat('en-LB', { dateStyle: 'medium' }).format(new Date(value)) : '-';
 
 export const formatDateTime = (value?: string | null): string =>
-    value ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—';
+    value ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '-';
 
 export const formatMoney = (value: string | number, currency = 'USD'): string =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(value));

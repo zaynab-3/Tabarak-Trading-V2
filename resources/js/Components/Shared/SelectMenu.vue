@@ -14,11 +14,13 @@ const props = withDefaults(defineProps<{
     placeholder?: string;
     ariaLabel?: string;
     disabled?: boolean;
+    compact?: boolean;
 }>(), {
     modelValue: '',
     placeholder: 'Select an option',
     ariaLabel: 'Select an option',
     disabled: false,
+    compact: false,
 });
 
 const emit = defineEmits<{
@@ -81,8 +83,13 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
         <button
             data-select-trigger
             type="button"
-            class="flex min-h-11 w-full items-center justify-between gap-3 rounded-md border border-tabarak-line bg-white px-3.5 py-2 text-left text-sm font-medium text-tabarak-ink shadow-sm transition hover:border-tabarak-blue focus:border-tabarak-blue disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-            :class="open ? 'border-tabarak-blue ring-2 ring-tabarak-blue/15' : ''"
+            class="flex w-full items-center justify-between border border-tabarak-line bg-white text-left font-medium text-tabarak-ink shadow-xs transition hover:border-tabarak-blue focus:border-tabarak-blue disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+            :class="[
+                compact
+                    ? 'min-h-8.5 rounded-lg px-2.5 py-1 text-xs sm:min-h-9 sm:px-3 sm:text-xs md:min-h-10 md:text-sm'
+                    : 'min-h-11 rounded-md px-3.5 py-2 text-sm shadow-sm',
+                open ? 'border-tabarak-blue ring-2 ring-tabarak-blue/15' : ''
+            ]"
             :aria-label="ariaLabel"
             :aria-expanded="open"
             :aria-controls="menuId"
@@ -92,7 +99,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
             @keydown="onTriggerKeydown"
         >
             <span class="truncate" :class="selected ? '' : 'text-slate-500'">{{ selected?.label || placeholder }}</span>
-            <ChevronDown class="size-4 shrink-0 text-tabarak-blue transition" :class="open ? 'rotate-180' : ''" />
+            <ChevronDown class="shrink-0 text-tabarak-blue transition" :class="[compact ? 'size-3.5 sm:size-4' : 'size-4', open ? 'rotate-180' : '']" />
         </button>
 
         <Transition enter-active-class="transition duration-150 ease-out" enter-from-class="-translate-y-1 opacity-0" enter-to-class="translate-y-0 opacity-100" leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -101,7 +108,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
                 :id="menuId"
                 role="listbox"
                 :aria-label="ariaLabel"
-                class="absolute right-0 z-[80] mt-2 max-h-72 min-w-full overflow-y-auto rounded-lg border border-tabarak-line bg-white p-1.5 shadow-[0_20px_50px_rgba(21,24,42,0.18)]"
+                class="absolute right-0 z-[80] mt-1.5 max-h-72 min-w-full overflow-y-auto rounded-lg border border-tabarak-line bg-white p-1 shadow-[0_20px_50px_rgba(21,24,42,0.18)]"
             >
                 <button
                     v-for="(option, index) in options"
@@ -110,16 +117,21 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
                     type="button"
                     role="option"
                     :aria-selected="String(option.value) === String(modelValue ?? '')"
-                    class="flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition"
-                    :class="String(option.value) === String(modelValue ?? '') ? 'bg-tabarak-mist font-bold text-tabarak-blue' : 'text-tabarak-ink hover:bg-[#FFF0E8] hover:text-tabarak-orange'"
+                    class="flex w-full items-center justify-between text-left transition"
+                    :class="[
+                        compact
+                            ? 'min-h-8 rounded-md px-2.5 py-1 text-xs sm:min-h-9 sm:px-3 sm:text-xs'
+                            : 'min-h-11 rounded-md px-3 py-2 text-sm',
+                        String(option.value) === String(modelValue ?? '') ? 'bg-tabarak-mist font-bold text-tabarak-blue' : 'text-tabarak-ink hover:bg-[#FFF0E8] hover:text-tabarak-orange'
+                    ]"
                     @click="choose(option)"
                     @keydown="onOptionKeydown($event, index)"
                 >
                     <span class="min-w-0">
                         <span class="block truncate">{{ option.label }}</span>
-                        <span v-if="option.description" class="mt-0.5 block text-xs font-normal text-slate-500">{{ option.description }}</span>
+                        <span v-if="option.description" class="mt-0.5 block text-[11px] font-normal text-slate-500">{{ option.description }}</span>
                     </span>
-                    <Check v-if="String(option.value) === String(modelValue ?? '')" class="size-4 shrink-0" />
+                    <Check v-if="String(option.value) === String(modelValue ?? '')" class="shrink-0" :class="compact ? 'size-3.5' : 'size-4'" />
                 </button>
             </div>
         </Transition>

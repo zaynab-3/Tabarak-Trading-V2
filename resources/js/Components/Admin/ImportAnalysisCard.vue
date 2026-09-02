@@ -17,7 +17,7 @@ const matchedCategory = computed(() => props.categories.find(
 ) ?? null);
 
 const categoryOptions = computed<SelectOption[]>(() => [
-    { value: '', label: 'Uncategorized — admin review needed' },
+    { value: '', label: 'Uncategorized - admin review needed' },
     ...props.categories.map((category) => ({ value: category.id, label: category.name })),
 ]);
 

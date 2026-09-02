@@ -5,31 +5,38 @@
 @layer base {
     :root { color-scheme: light; }
     html { scroll-behavior: smooth; }
-    body { @apply bg-oat-50 text-slate-800; }
-    ::selection { @apply bg-saffron-100 text-forest-900; }
+    body { @apply bg-[#F8F9FC] font-sans text-slate-800 antialiased; }
+    ::selection { @apply bg-tabarak-line text-tabarak-ink; }
     button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
     :focus-visible { @apply outline-none ring-2 ring-saffron-500 ring-offset-2; }
+    input[type="search"]::-webkit-search-decoration,
+    input[type="search"]::-webkit-search-cancel-button,
+    input[type="search"]::-webkit-search-results-button,
+    input[type="search"]::-webkit-search-results-decoration {
+        -webkit-appearance: none;
+        display: none;
+    }
 }
 
 @layer components {
-    .page-shell { @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10; }
-    .surface { @apply rounded-lg border border-tabarak-line bg-white shadow-[0_8px_28px_rgba(64,88,225,0.06)]; }
-    .btn-primary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-tabarak-blue px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#3147C8] disabled:cursor-not-allowed disabled:opacity-50; }
-    .btn-secondary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-tabarak-line bg-white px-5 py-2.5 text-sm font-semibold text-tabarak-blue transition hover:border-tabarak-orange hover:text-tabarak-orange disabled:cursor-not-allowed disabled:opacity-50; }
-    .btn-danger { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50; }
+    .page-shell { @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8; }
+    .surface { @apply rounded-xl border border-[#E7EAF3] bg-white shadow-[0_1px_2px_rgba(21,24,42,0.03)]; }
+    .btn-primary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-tabarak-orange px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#E94E00] disabled:cursor-not-allowed disabled:opacity-50; }
+    .btn-secondary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-tabarak-line bg-white px-5 py-2.5 text-sm font-semibold text-tabarak-blue transition hover:bg-tabarak-mist disabled:cursor-not-allowed disabled:opacity-50; }
+    .btn-danger { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50; }
     .field-label { @apply mb-1.5 block text-sm font-semibold text-slate-700; }
-    .field-input { @apply block min-h-11 w-full rounded-md border-tabarak-line bg-white text-sm text-slate-900 shadow-none placeholder:text-slate-400 focus:border-tabarak-blue focus:ring-tabarak-blue; }
-    .eyebrow { @apply text-xs font-bold uppercase tracking-[0.2em] text-tabarak-orange; }
-    .storefront-shell { @apply min-h-screen bg-white text-tabarak-ink; }
+    .field-input { @apply block min-h-12 w-full rounded-lg border-[#D9DEED] bg-white text-sm text-slate-900 shadow-none placeholder:text-slate-400 focus:border-tabarak-blue focus:ring-tabarak-blue; }
+    .eyebrow { @apply text-sm font-semibold text-tabarak-blue; }
+    .storefront-shell { @apply min-h-screen bg-[#F8F9FC] text-tabarak-ink; }
     .storefront-shell :focus-visible { @apply ring-tabarak-blue; }
     .admin-shell { @apply text-tabarak-ink; }
     .admin-shell :focus-visible { @apply ring-tabarak-blue; }
-    .admin-nav-link { @apply relative flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-white/75 transition hover:bg-white/10 hover:text-white; }
-    .admin-nav-link-active { @apply bg-white text-tabarak-blue shadow-[0_8px_22px_rgba(31,43,125,0.18)] hover:bg-white hover:text-tabarak-blue; }
-    .admin-nav-link-active::before { content: ''; @apply absolute -left-1 h-6 w-1 rounded-full bg-tabarak-orange; }
-    .admin-icon-button { @apply grid size-11 shrink-0 place-items-center rounded-md border border-tabarak-line bg-white text-tabarak-blue transition hover:border-tabarak-orange hover:text-tabarak-orange; }
-    .admin-secondary-action { @apply inline-flex min-h-11 items-center gap-2 rounded-md border border-tabarak-line bg-white px-3 text-sm font-semibold text-tabarak-blue transition hover:border-tabarak-orange hover:text-tabarak-orange; }
-    .admin-table-action { @apply grid size-10 shrink-0 place-items-center rounded-md border border-tabarak-line bg-white text-slate-500 transition hover:border-tabarak-blue hover:text-tabarak-blue; }
+    .admin-nav-link { @apply relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-600 transition hover:bg-tabarak-mist hover:text-tabarak-blue; }
+    .admin-nav-link-active { @apply bg-tabarak-blue font-semibold text-white hover:bg-tabarak-blue hover:text-white; }
+    .admin-nav-link-active::before { content: ''; @apply absolute -left-3 h-6 w-1 rounded-r-full bg-tabarak-orange; }
+    .admin-icon-button { @apply grid size-11 shrink-0 place-items-center rounded-lg border border-[#E1E5F0] bg-white text-slate-600 transition hover:bg-tabarak-mist hover:text-tabarak-blue; }
+    .admin-secondary-action { @apply inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#E1E5F0] bg-white px-3 text-sm font-semibold text-tabarak-blue transition hover:bg-tabarak-mist; }
+    .admin-table-action { @apply grid size-10 shrink-0 place-items-center rounded-lg border border-[#E1E5F0] bg-white text-slate-500 transition hover:bg-tabarak-mist hover:text-tabarak-blue; }
     .admin-section-title { @apply text-sm font-bold text-tabarak-ink; }
 
     .admin-shell .text-forest-900, .admin-shell .text-forest-800 { color: #15182A; }
@@ -49,6 +56,8 @@
     .admin-shell table tbody tr:hover { background-color: rgba(245, 247, 255, 0.7); }
     .admin-shell .hover\:bg-oat-50:hover { background-color: #F5F7FF; }
     .admin-shell .hover\:border-forest-600:hover { border-color: #4058E1; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

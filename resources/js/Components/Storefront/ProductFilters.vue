@@ -17,8 +17,8 @@ const statusOptions: SelectOption[] = [
 ];
 const sortOptions: SelectOption[] = [
     { value: 'newest', label: 'Newest' },
-    { value: 'name-asc', label: 'Name A–Z' },
-    { value: 'name-desc', label: 'Name Z–A' },
+    { value: 'name-asc', label: 'Name A-Z' },
+    { value: 'name-desc', label: 'Name Z-A' },
 ];
 </script>
 

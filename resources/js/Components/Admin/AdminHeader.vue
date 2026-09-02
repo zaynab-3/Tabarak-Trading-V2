@@ -14,20 +14,21 @@ const section = computed(() => {
     if (route().current('admin.brands.*')) return 'Brands';
     if (route().current('admin.media.*')) return 'Media library';
     if (route().current('admin.imports.*')) return 'Bulk import';
+    if (route().current('admin.orders.*')) return 'Orders';
+    if (route().current('admin.order-notices.*')) return 'Order notices';
     if (route().current('admin.settings.*')) return 'Settings';
     return 'Dashboard';
 });
 </script>
 
 <template>
-    <header class="sticky top-0 z-40 flex min-h-[76px] items-center gap-3 border-b border-tabarak-line bg-white/95 px-4 backdrop-blur md:px-6 xl:px-8">
-        <button class="admin-icon-button md:hidden" type="button" aria-label="Open admin navigation" @click="$emit('menu')">
+    <header class="sticky top-0 z-40 flex min-h-[72px] items-center gap-3 border-b border-[#E7EAF3] bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8 xl:px-10">
+        <button class="admin-icon-button lg:hidden" type="button" aria-label="Open admin navigation" @click="$emit('menu')">
             <Menu class="size-5" />
         </button>
 
         <div class="min-w-0">
-            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-tabarak-orange">Tabarak administration</p>
-            <p class="truncate text-base font-bold text-tabarak-ink">{{ section }}</p>
+            <p class="truncate text-base font-semibold text-tabarak-ink">{{ section }}</p>
         </div>
 
         <div class="ml-auto flex items-center gap-2">
@@ -39,8 +40,9 @@ const section = computed(() => {
                 <span class="grid size-9 place-items-center rounded-full bg-tabarak-mist text-tabarak-blue"><UserRound class="size-4" /></span>
                 <span class="max-w-40 truncate text-sm font-semibold text-slate-600">{{ page.props.auth.user?.name }}</span>
             </div>
-            <button class="admin-icon-button hover:border-red-200 hover:text-red-600" type="button" aria-label="Sign out" @click="logout">
+            <button class="admin-secondary-action hover:border-red-200 hover:text-red-600" type="button" aria-label="Sign out" @click="logout">
                 <LogOut class="size-4" />
+                <span class="hidden xl:inline">Sign out</span>
             </button>
         </div>
     </header>

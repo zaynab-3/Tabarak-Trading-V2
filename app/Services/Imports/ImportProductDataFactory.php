@@ -17,14 +17,20 @@ class ImportProductDataFactory
     {
         $metadata = $item->suggested_metadata ?? [];
         [$weightValue, $weightUnit] = $this->weight($item->suggested_weight);
+
         $packQuantity = array_key_exists('pack_quantity', $overrides)
             ? $overrides['pack_quantity']
             : $this->integer($metadata['pack_quantity'] ?? null);
+
+        $brandName = array_key_exists('brand', $overrides)
+            ? (filled($overrides['brand']) ? trim((string) $overrides['brand']) : null)
+            : $item->suggested_brand;
+
         $sku = $this->availableSku($metadata['sku'] ?? null);
 
         return ProductData::fromArray([
             'name' => $overrides['name'] ?? $item->suggested_name,
-            'brand_id' => $this->taxonomy->brandId($item->suggested_brand),
+            'brand_id' => $this->taxonomy->brandId($brandName),
             'category_id' => array_key_exists('category_id', $overrides)
                 ? (filled($overrides['category_id']) ? (int) $overrides['category_id'] : null)
                 : $this->taxonomy->categoryId($item->suggested_category),

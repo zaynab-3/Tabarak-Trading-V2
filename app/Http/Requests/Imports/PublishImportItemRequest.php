@@ -16,6 +16,7 @@ class PublishImportItemRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:180'],
+            'brand' => ['nullable', 'string', 'max:120'],
             'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('is_active', true)],
             'pack_quantity' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'allows_open_quantity' => ['required', 'boolean'],

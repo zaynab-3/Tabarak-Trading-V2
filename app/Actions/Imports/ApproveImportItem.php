@@ -27,14 +27,15 @@ class ApproveImportItem
             return $item->approvedProduct;
         }
 
-        if ($item->status !== ImportItemStatus::Review || blank($overrides['name'] ?? $item->suggested_name)) {
-            throw new LogicException('Only analyzed items with a product name can be published.');
+        if (! in_array($item->status, [ImportItemStatus::Review, ImportItemStatus::Failed], true)
+            || blank($overrides['name'] ?? $item->suggested_name)) {
+            throw new LogicException('Only reviewable items with a product name can be published.');
         }
 
         $product = DB::transaction(function () use ($item, $overrides): Product {
             $product = $this->createProduct->handle($this->productData->make($item, $overrides));
             $this->attachMedia->handle($product, $item->media);
-            $product->loadMissing('category:id,name');
+            $product->loadMissing(['brand:id,name', 'category:id,name']);
             $warnings = collect($item->warnings ?? [])
                 ->reject(fn (string $warning) => $product->category_id
                     && str_contains($warning, 'could not be matched confidently to an existing category'))
@@ -43,6 +44,8 @@ class ApproveImportItem
             $item->update([
                 'status' => ImportItemStatus::Approved,
                 'approved_product_id' => $product->id,
+                'suggested_name' => $product->name,
+                'suggested_brand' => $product->brand?->name,
                 'suggested_category' => $product->category?->name,
                 'warnings' => $warnings ?: null,
             ]);

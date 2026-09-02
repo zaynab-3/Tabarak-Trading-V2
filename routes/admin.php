@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ImportBatchController;
 use App\Http\Controllers\Admin\ImportBatchAnalysisController;
 use App\Http\Controllers\Admin\ImportBatchImageController;
 use App\Http\Controllers\Admin\ImportBatchPublicationController;
+use App\Http\Controllers\Admin\ImportItemController;
 use App\Http\Controllers\Admin\ImportItemPublicationController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MediaOrderController;
@@ -47,6 +48,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/imports/{importBatch}/images', [ImportBatchImageController::class, 'store'])->name('imports.images.store');
         Route::post('/imports/{importBatch}/analysis', [ImportBatchAnalysisController::class, 'store'])->name('imports.analysis.store');
         Route::post('/imports/{importBatch}/publish', [ImportBatchPublicationController::class, 'store'])->name('imports.publish.store');
+        Route::delete('/imports/{importBatch}/items/{importItem}', [ImportItemController::class, 'destroy'])->name('imports.items.destroy');
         Route::post('/imports/{importBatch}/items/{importItem}/publish', [ImportItemPublicationController::class, 'store'])->name('imports.items.publish.store');
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');

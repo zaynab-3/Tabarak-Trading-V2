@@ -14,8 +14,9 @@ export async function svgToPng(file: File): Promise<File> {
     }
 
     sanitizeSvg(root);
+    normalizeLegacyImageLinks(root);
 
-    const sanitized = new XMLSerializer().serializeToString(svgDocument);
+    const sanitized = new XMLSerializer().serializeToString(root);
     const blob = new Blob([sanitized], { type: 'image/svg+xml' });
     const objectUrl = URL.createObjectURL(blob);
 
@@ -34,6 +35,7 @@ export async function svgToPng(file: File): Promise<File> {
 
         context.clearRect(0, 0, width, height);
         context.drawImage(image, 0, 0, width, height);
+        assertVisiblePixels(context, width, height, file.name);
 
         const png = await canvasToBlob(canvas);
         const pngName = file.name.replace(/\.svg$/i, '') + '.png';
@@ -42,6 +44,32 @@ export async function svgToPng(file: File): Promise<File> {
     } finally {
         URL.revokeObjectURL(objectUrl);
     }
+}
+
+function normalizeLegacyImageLinks(root: Element) {
+    const xlinkNamespace = 'http://www.w3.org/1999/xlink';
+
+    root.querySelectorAll('image, use').forEach((element) => {
+        const legacyHref = element.getAttributeNS(xlinkNamespace, 'href') ?? element.getAttribute('xlink:href');
+
+        if (legacyHref && !element.getAttribute('href')) {
+            element.setAttribute('href', legacyHref);
+        }
+    });
+}
+
+function assertVisiblePixels(context: CanvasRenderingContext2D, width: number, height: number, fileName: string) {
+    const pixels = context.getImageData(0, 0, width, height).data;
+    const pixelCount = width * height;
+    const sampleInterval = Math.max(1, Math.floor(pixelCount / 30000));
+
+    for (let pixel = 0; pixel < pixelCount; pixel += sampleInterval) {
+        if (pixels[(pixel * 4) + 3] > 8) {
+            return;
+        }
+    }
+
+    throw new Error(`${fileName} rendered as a blank image. Please check the SVG or export it as PNG.`);
 }
 
 function sanitizeSvg(root: Element) {

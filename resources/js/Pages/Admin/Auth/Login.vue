@@ -3,7 +3,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { LockKeyhole, LogIn, Mail } from '@lucide/vue';
 import AdminAuthLayout from '@/Layouts/AdminAuthLayout.vue';
 
-const form = useForm({ email: '', password: '', remember: false });
+const form = useForm({ email: '', password: '', remember: true });
 const submit = () => form.post(route('admin.login.store'), { onFinish: () => form.reset('password') });
 </script>
 

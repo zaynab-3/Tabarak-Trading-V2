@@ -26,6 +26,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'customer_name' => ['required', 'string', 'min:2', 'max:180'],
             'customer_phone' => ['required', 'string', 'regex:/^\+1[2-9]\d{2}[2-9]\d{6}$/'],
+            'customer_address' => ['required', 'string', 'min:3', 'max:255'],
         ];
     }
 
@@ -34,6 +35,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'customer_name.required' => 'Enter the shop or owner name.',
             'customer_phone.regex' => 'Enter a valid U.S. number such as +1 (202) 222 2222.',
+            'customer_address.required' => 'Enter the delivery or shop address.',
         ];
     }
 }

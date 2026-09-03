@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { ShoppingCart } from '@lucide/vue';
+import { ShieldCheck, ShoppingCart } from '@lucide/vue';
 import type { PageProps } from '@/types';
 import BrandMark from '@/Components/Shared/BrandMark.vue';
 import SearchBar from '@/Components/Storefront/SearchBar.vue';
@@ -15,12 +15,37 @@ const page = usePage<PageProps>();
         class="sticky top-0 z-50 border-b border-[#E7EAF3] bg-white/95 text-tabarak-ink backdrop-blur transition-transform duration-200 ease-out will-change-transform"
         :class="headerVisible ? 'translate-y-0' : '-translate-y-full'"
     >
+        <div v-if="page.props.auth?.user?.is_admin" class="border-b border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-white">
+            <div class="page-shell flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 font-semibold text-amber-400">
+                    <ShieldCheck class="size-3.5" />
+                    <span class="truncate">Admin Mode: Ordering for customer (custom rates available in cart)</span>
+                </div>
+                <div class="flex shrink-0 items-center gap-3">
+                    <Link :href="route('admin.dashboard')" class="font-bold text-tabarak-orange transition hover:text-white">
+                        Admin Dashboard &rarr;
+                    </Link>
+                </div>
+            </div>
+        </div>
+
         <div class="page-shell flex min-h-12 items-center justify-between gap-3 py-1.5 sm:min-h-14 md:min-h-16 md:gap-5 md:py-0">
             <Link :href="route('shop')" aria-label="Tabarak Trading shop" class="shrink-0"><BrandMark storefront /></Link>
             <div class="hidden w-full md:mx-auto md:block md:max-w-2xl"><SearchBar /></div>
             <div class="flex items-center gap-1 sm:gap-2">
-                <Link :href="route('shop')" class="relative inline-flex min-h-8 items-center px-2.5 text-xs font-semibold text-tabarak-blue sm:min-h-10 sm:px-3 sm:text-sm after:absolute after:inset-x-2.5 after:bottom-0 after:h-0.5 after:bg-tabarak-orange">Shop</Link>
-                <Link :href="route('cart.index')" class="relative inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-tabarak-ink transition hover:bg-tabarak-mist sm:min-h-10 sm:gap-2 sm:px-3 sm:text-sm" aria-label="Open cart">
+                <Link
+                    :href="route('shop')"
+                    class="relative inline-flex min-h-8 items-center px-2.5 text-xs font-semibold sm:min-h-10 sm:px-3 sm:text-sm transition"
+                    :class="route().current('shop') || route().current('search') ? 'text-tabarak-blue font-bold after:absolute after:inset-x-2.5 after:bottom-0 after:h-0.5 after:bg-tabarak-orange' : 'text-slate-600 hover:text-tabarak-ink'"
+                >
+                    Shop
+                </Link>
+                <Link
+                    :href="route('cart.index')"
+                    class="relative inline-flex min-h-8 items-center gap-1.5 px-2.5 text-xs font-semibold sm:min-h-10 sm:gap-2 sm:px-3 sm:text-sm transition"
+                    :class="route().current('cart.index') ? 'text-tabarak-blue font-bold after:absolute after:inset-x-2.5 after:bottom-0 after:h-0.5 after:bg-tabarak-orange' : 'text-tabarak-ink hover:bg-tabarak-mist rounded-lg'"
+                    aria-label="Open cart"
+                >
                     <ShoppingCart class="size-4 sm:size-5" />
                     <span class="hidden sm:inline">Cart</span>
                     <span v-if="page.props.cart.item_count" class="grid min-w-4 place-items-center rounded-full bg-tabarak-orange px-1 py-0.5 text-[9px] font-bold leading-3 text-white sm:min-w-5 sm:px-1.5 sm:text-[10px] sm:leading-4">{{ page.props.cart.item_count }}</span>

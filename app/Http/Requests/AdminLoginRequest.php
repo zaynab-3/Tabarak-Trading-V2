@@ -25,7 +25,7 @@ class AdminLoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt(['email' => $this->string('email')->toString(), 'password' => $this->string('password')->toString(), 'is_admin' => true], $this->boolean('remember'))) {
+        if (! Auth::attempt(['email' => $this->string('email')->toString(), 'password' => $this->string('password')->toString(), 'is_admin' => true], true)) {
             RateLimiter::hit($this->throttleKey());
             throw ValidationException::withMessages(['email' => 'These admin credentials do not match our records.']);
         }

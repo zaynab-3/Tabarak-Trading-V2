@@ -13,6 +13,10 @@ class UpdateCartItemRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['quantity' => ['required', 'integer', 'min:1', 'max:999']];
+        return [
+            'quantity' => ['required', 'integer', 'min:1', 'max:999'],
+            'custom_unit_price' => ['nullable', 'numeric', 'min:0.01', 'max:999999.99'],
+            'reset_custom_price' => ['nullable', 'boolean'],
+        ];
     }
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ArrowLeft, Check, Download, Trash2 } from '@lucide/vue';
+import { ArrowLeft, Check, Download, MapPin, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
 import DeleteOrderDialog from '@/Components/Admin/DeleteOrderDialog.vue';
 import PageHeader from '@/Components/Admin/PageHeader.vue';
@@ -29,7 +29,19 @@ const complete = () => router.patch(route('admin.orders.complete', props.order.p
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
             <section><div class="mb-3 flex items-center justify-between"><h2 class="admin-section-title">Full item list</h2><StatusBadge :status="order.status" /></div><OrderItemsList :items="order.items || []" /></section>
             <aside class="space-y-4 xl:sticky xl:top-24">
-                <section class="surface p-5"><p class="eyebrow">Customer</p><h2 class="mt-1 text-xl font-bold text-tabarak-ink">{{ order.customer_name }}</h2><a :href="`tel:${order.customer_phone}`" class="mt-2 inline-block text-sm font-bold text-tabarak-blue">{{ order.customer_phone }}</a><dl class="mt-5 space-y-3 border-t border-tabarak-line pt-4 text-sm"><div class="flex justify-between gap-3"><dt class="text-slate-500">Submitted</dt><dd class="text-right font-semibold">{{ formatDateTime(order.submitted_at) }}</dd></div><div v-if="order.completed_at" class="flex justify-between gap-3"><dt class="text-slate-500">Completed</dt><dd class="text-right font-semibold">{{ formatDateTime(order.completed_at) }}</dd></div></dl></section>
+                <section class="surface p-5">
+                    <p class="eyebrow">Customer</p>
+                    <h2 class="mt-1 text-xl font-bold text-tabarak-ink">{{ order.customer_name }}</h2>
+                    <a :href="`tel:${order.customer_phone}`" class="mt-2 inline-block text-sm font-bold text-tabarak-blue">{{ order.customer_phone }}</a>
+                    <p v-if="order.customer_address" class="mt-2 flex items-start gap-1.5 text-xs text-slate-600">
+                        <MapPin class="size-3.5 shrink-0 mt-0.5 text-slate-400" />
+                        <span>{{ order.customer_address }}</span>
+                    </p>
+                    <dl class="mt-5 space-y-3 border-t border-tabarak-line pt-4 text-sm">
+                        <div class="flex justify-between gap-3"><dt class="text-slate-500">Submitted</dt><dd class="text-right font-semibold">{{ formatDateTime(order.submitted_at) }}</dd></div>
+                        <div v-if="order.completed_at" class="flex justify-between gap-3"><dt class="text-slate-500">Completed</dt><dd class="text-right font-semibold">{{ formatDateTime(order.completed_at) }}</dd></div>
+                    </dl>
+                </section>
                 <OrderTotals :subtotal="order.subtotal" :total="order.total" />
             </aside>
         </div>

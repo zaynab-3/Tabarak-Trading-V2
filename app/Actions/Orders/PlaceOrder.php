@@ -28,7 +28,7 @@ class PlaceOrder
         private readonly ProductInventory $inventory,
     ) {}
 
-    public function handle(string $customerName, string $customerPhone): Order
+    public function handle(string $customerName, string $customerPhone, ?string $customerAddress = null): Order
     {
         $lines = $this->cart->lines();
         if ($lines->isEmpty()) {
@@ -38,7 +38,7 @@ class PlaceOrder
         $token = (string) Str::uuid();
 
         try {
-            $order = DB::transaction(function () use ($customerName, $customerPhone, $lines, $token): Order {
+            $order = DB::transaction(function () use ($customerName, $customerPhone, $customerAddress, $lines, $token): Order {
                 $products = Product::query()
                     ->whereKey($lines->map(fn (CartLineData $line) => $line->product->id))
                     ->lockForUpdate()
@@ -57,7 +57,7 @@ class PlaceOrder
                     }
 
                     $this->inventory->assertAvailable($product, $line->quantity);
-                    $unitPriceCents = Money::toCents($product->unit_price);
+                    $unitPriceCents = $line->unitPriceCents;
 
                     return [
                         'product' => $product,
@@ -72,6 +72,7 @@ class PlaceOrder
                     'public_token' => $token,
                     'customer_name' => $customerName,
                     'customer_phone' => $customerPhone,
+                    'customer_address' => $customerAddress,
                     'status' => OrderStatus::Pending,
                     'currency' => Money::CURRENCY,
                     'subtotal' => Money::fromCents($subtotalCents),

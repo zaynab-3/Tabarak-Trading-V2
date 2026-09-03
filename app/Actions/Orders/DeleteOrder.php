@@ -57,6 +57,7 @@ class DeleteOrder
                 'public_token' => $order->public_token,
                 'customer_name' => $order->customer_name,
                 'customer_phone' => $order->customer_phone,
+                'customer_address' => $order->customer_address,
                 'order_status' => $order->status->value,
                 'currency' => $order->currency,
                 'subtotal' => $order->subtotal,

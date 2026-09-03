@@ -11,5 +11,7 @@ readonly class CartLineData
         public int $quantity,
         public int $unitPriceCents,
         public int $lineTotalCents,
+        public ?int $originalUnitPriceCents = null,
+        public bool $isCustomPrice = false,
     ) {}
 }

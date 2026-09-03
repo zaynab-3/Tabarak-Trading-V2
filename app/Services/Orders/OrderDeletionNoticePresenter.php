@@ -14,6 +14,7 @@ class OrderDeletionNoticePresenter
             'order_number' => $notice->order_number,
             'customer_name' => $notice->customer_name,
             'customer_phone' => $notice->customer_phone,
+            'customer_address' => $notice->customer_address,
             'order_status' => $notice->order_status,
             'currency' => $notice->currency,
             'subtotal' => $notice->subtotal,

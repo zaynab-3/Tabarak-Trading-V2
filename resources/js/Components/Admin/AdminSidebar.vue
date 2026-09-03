@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BellRing, Boxes, Building2, ClipboardList, FolderTree, Gauge, Images, Settings, Sparkles } from '@lucide/vue';
+import { BellRing, Boxes, Building2, ClipboardList, FolderTree, Gauge, Images, Settings, Sparkles, Store } from '@lucide/vue';
 import type { Component } from 'vue';
 import BrandMark from '@/Components/Shared/BrandMark.vue';
 
@@ -87,8 +87,15 @@ const isActive = (routeName: string) => route().current(routeName)
             </div>
         </nav>
 
-        <div class="border-t border-[#EEF0F6] p-5">
-            <p class="text-xs leading-5 text-slate-400">Catalogue management made simple.</p>
+        <div class="border-t border-[#EEF0F6] p-4 space-y-2">
+            <Link
+                :href="route('shop')"
+                class="flex w-full items-center justify-center gap-2 rounded-lg bg-tabarak-blue/10 p-2.5 text-xs font-bold text-tabarak-blue transition hover:bg-tabarak-blue hover:text-white"
+            >
+                <Store class="size-4" />
+                <span>Enter website as Admin</span>
+            </Link>
+            <p class="text-center text-[11px] leading-4 text-slate-400">Order for customer with custom prices</p>
         </div>
     </aside>
 </template>

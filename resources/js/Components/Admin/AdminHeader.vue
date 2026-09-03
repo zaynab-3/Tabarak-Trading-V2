@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ExternalLink, LogOut, Menu, UserRound } from '@lucide/vue';
+import { ExternalLink, LogOut, Menu, Store, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 import type { PageProps } from '@/types';
 
@@ -32,9 +32,9 @@ const section = computed(() => {
         </div>
 
         <div class="ml-auto flex items-center gap-2">
-            <Link :href="route('shop')" class="admin-secondary-action">
-                <span class="hidden sm:inline">View shop</span>
-                <ExternalLink class="size-4" />
+            <Link :href="route('shop')" class="inline-flex items-center gap-1.5 rounded-md border border-tabarak-blue/20 bg-tabarak-blue/10 px-3 py-1.5 text-xs font-bold text-tabarak-blue transition hover:bg-tabarak-blue hover:text-white">
+                <Store class="size-4" />
+                <span>Enter website as Admin</span>
             </Link>
             <div class="hidden items-center gap-2 border-l border-tabarak-line pl-3 lg:flex">
                 <span class="grid size-9 place-items-center rounded-full bg-tabarak-mist text-tabarak-blue"><UserRound class="size-4" /></span>

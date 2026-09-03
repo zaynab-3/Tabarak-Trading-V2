@@ -30,7 +30,8 @@ class OrderController extends Controller
                 $query->where(function ($nested) use ($search): void {
                     $nested->where('order_number', 'like', '%'.$search.'%')
                         ->orWhere('customer_name', 'like', '%'.$search.'%')
-                        ->orWhere('customer_phone', 'like', '%'.$search.'%');
+                        ->orWhere('customer_phone', 'like', '%'.$search.'%')
+                        ->orWhere('customer_address', 'like', '%'.$search.'%');
                 });
             })
             ->latest('submitted_at')

@@ -61,6 +61,9 @@
                     <span class="meta-label">Shop / owner</span>
                     <span class="meta-value">{{ $order->customer_name }}</span>
                     <div class="meta-line">{{ $order->customer_phone }}</div>
+                    @if ($order->customer_address)
+                        <div class="meta-line">{{ $order->customer_address }}</div>
+                    @endif
                 </div>
             </td>
             <td>

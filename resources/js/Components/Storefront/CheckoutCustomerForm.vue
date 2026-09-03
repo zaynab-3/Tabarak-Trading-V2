@@ -4,7 +4,11 @@ import { CheckCircle2, CircleAlert, Send } from '@lucide/vue';
 import { computed } from 'vue';
 import { canonicalUsPhoneNumber, formatUsPhoneNumber, isCompleteUsPhoneNumber, isValidUsPhoneNumber, remainingUsPhoneDigits } from '@/Utils/usPhone';
 
-const form = useForm({ customer_name: '', customer_phone: '+1 ' });
+const form = useForm({
+    customer_name: '',
+    customer_phone: '+1 ',
+    customer_address: '',
+});
 const cartError = computed(() => (form.errors as Record<string, string>).cart);
 const phoneComplete = computed(() => isCompleteUsPhoneNumber(form.customer_phone));
 const phoneValid = computed(() => isValidUsPhoneNumber(form.customer_phone));
@@ -35,6 +39,21 @@ const submit = () => {
             <input v-model.trim="form.customer_name" class="field-input" type="text" maxlength="180" autocomplete="organization" placeholder="Shop or owner name" required />
             <span v-if="form.errors.customer_name" class="mt-1 block text-xs font-semibold text-red-600">{{ form.errors.customer_name }}</span>
         </label>
+
+        <label class="mt-4 block">
+            <span class="field-label">Shop / delivery address *</span>
+            <input
+                v-model.trim="form.customer_address"
+                class="field-input"
+                type="text"
+                maxlength="255"
+                autocomplete="street-address"
+                placeholder="Street address, suite, city, state, zip"
+                required
+            />
+            <span v-if="form.errors.customer_address" class="mt-1 block text-xs font-semibold text-red-600">{{ form.errors.customer_address }}</span>
+        </label>
+
         <label class="mt-4 block">
             <span class="field-label">U.S. phone number *</span>
             <input :value="form.customer_phone" class="field-input" type="tel" maxlength="17" inputmode="tel" autocomplete="tel" placeholder="+1 (202) 222 2222" required @input="formatPhone" />
@@ -45,7 +64,7 @@ const submit = () => {
         </label>
         <p v-if="cartError" class="mt-3 text-sm font-semibold text-red-600">{{ cartError }}</p>
 
-        <button class="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-tabarak-orange px-5 text-sm font-bold text-white transition hover:bg-[#E94E00] disabled:cursor-not-allowed disabled:opacity-60" type="submit" :disabled="form.processing || !phoneValid">
+        <button class="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-tabarak-orange px-5 text-sm font-bold text-white transition hover:bg-[#E94E00] disabled:cursor-not-allowed disabled:opacity-60" type="submit" :disabled="form.processing || !phoneValid || !form.customer_name.trim() || !form.customer_address.trim()">
             <Send class="size-4" /> {{ form.processing ? 'Sending order…' : 'Send order to Tabarak' }}
         </button>
         <p class="mt-3 text-center text-xs text-slate-400">All amounts are charged and shown in USD.</p>

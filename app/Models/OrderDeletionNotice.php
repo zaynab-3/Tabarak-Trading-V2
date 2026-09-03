@@ -12,7 +12,7 @@ class OrderDeletionNotice extends Model
     use HasFactory;
 
     protected $fillable = [
-        'order_number', 'public_token', 'customer_name', 'customer_phone', 'order_status',
+        'order_number', 'public_token', 'customer_name', 'customer_phone', 'customer_address', 'order_status',
         'currency', 'subtotal', 'total', 'deletion_mode', 'restored_quantity', 'items',
         'submitted_at', 'completed_at', 'deleted_by', 'recorded_at',
     ];

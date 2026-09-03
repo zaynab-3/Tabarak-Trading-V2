@@ -4,6 +4,8 @@ export interface CartItem {
     product: Product;
     quantity: number;
     unit_price: string;
+    original_unit_price?: string | null;
+    is_custom_price?: boolean;
     line_total: string;
 }
 
@@ -11,6 +13,7 @@ export interface CartSummary {
     items: CartItem[];
     item_count: number;
     subtotal: string;
+    has_custom_prices?: boolean;
     currency: 'USD';
 }
 
@@ -34,6 +37,7 @@ export interface Order {
     order_number: string;
     customer_name: string;
     customer_phone: string;
+    customer_address?: string | null;
     status: 'pending' | 'completed';
     currency: 'USD';
     subtotal: string;
@@ -67,6 +71,7 @@ export interface OrderDeletionNotice {
     order_number: string;
     customer_name: string;
     customer_phone: string;
+    customer_address?: string | null;
     order_status: 'pending' | 'completed';
     currency: 'USD';
     subtotal: string;

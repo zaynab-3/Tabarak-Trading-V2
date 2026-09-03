@@ -112,7 +112,17 @@ defineProps<{
             <DataTable label="Recent orders">
                 <thead><tr><th class="px-4 py-3">Order</th><th class="px-4 py-3">Shop / owner</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Total</th><th class="hidden px-4 py-3 md:table-cell">Submitted</th></tr></thead>
                 <tbody class="divide-y divide-tabarak-line">
-                    <tr v-for="order in recentOrders" :key="order.id"><td class="px-4 py-3"><Link :href="route('admin.orders.show', order.public_token)" class="font-semibold text-tabarak-blue hover:text-tabarak-orange">{{ order.order_number }}</Link></td><td class="px-4 py-3"><p class="font-semibold text-tabarak-ink">{{ order.customer_name }}</p><p class="mt-1 text-xs text-slate-500">{{ order.customer_phone }}</p></td><td class="px-4 py-3"><StatusBadge :status="order.status" /></td><td class="px-4 py-3 font-semibold text-tabarak-ink">{{ formatMoney(order.total) }}</td><td class="hidden px-4 py-3 text-slate-500 md:table-cell">{{ formatDateTime(order.submitted_at) }}</td></tr>
+                    <tr v-for="order in recentOrders" :key="order.id">
+                        <td class="px-4 py-3"><Link :href="route('admin.orders.show', order.public_token)" class="font-semibold text-tabarak-blue hover:text-tabarak-orange">{{ order.order_number }}</Link></td>
+                        <td class="px-4 py-3">
+                            <p class="font-semibold text-tabarak-ink">{{ order.customer_name }}</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ order.customer_phone }}</p>
+                            <p v-if="order.customer_address" class="mt-0.5 text-xs text-slate-400 truncate max-w-xs" :title="order.customer_address">{{ order.customer_address }}</p>
+                        </td>
+                        <td class="px-4 py-3"><StatusBadge :status="order.status" /></td>
+                        <td class="px-4 py-3 font-semibold text-tabarak-ink">{{ formatMoney(order.total) }}</td>
+                        <td class="hidden px-4 py-3 text-slate-500 md:table-cell">{{ formatDateTime(order.submitted_at) }}</td>
+                    </tr>
                     <tr v-if="!recentOrders.length"><td colspan="5" class="px-4 py-10 text-center text-sm text-slate-500">New storefront orders will appear here.</td></tr>
                 </tbody>
             </DataTable>

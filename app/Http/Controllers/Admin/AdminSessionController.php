@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminLoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,8 +13,14 @@ use Inertia\Response;
 
 class AdminSessionController extends Controller
 {
-    public function create(): Response
+    public function create(): Response|RedirectResponse
     {
+        $user = Auth::user();
+
+        if ($user instanceof User && $user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         return Inertia::render('Admin/Auth/Login');
     }
 

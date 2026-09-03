@@ -20,6 +20,7 @@ class OrderController extends Controller
         $order = $action->handle(
             customerName: trim((string) $request->validated('customer_name')),
             customerPhone: (string) $request->validated('customer_phone'),
+            customerAddress: trim((string) $request->validated('customer_address')),
         );
 
         return redirect()->route('orders.show', $order)

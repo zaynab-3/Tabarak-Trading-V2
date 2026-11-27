@@ -14,10 +14,10 @@
         <title inertia>{{ config('app.name', 'Tabarak Trading V2') }}</title>
 
         <!-- Brand icons -->
-        <link rel="icon" type="image/svg+xml" href="/icons/tabarak-icon.svg">
-        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
-        <link rel="manifest" href="/site.webmanifest">
+        <link rel="icon" type="image/svg+xml" href="{{ asset('icons/tabarak-icon.svg') }}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/icon-192.png') }}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/apple-touch-icon.png') }}">
+        <link rel="manifest" href="{{ asset('site.webmanifest') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

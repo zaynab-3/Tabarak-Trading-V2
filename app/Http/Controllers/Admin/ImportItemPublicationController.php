@@ -22,6 +22,10 @@ class ImportItemPublicationController extends Controller
         abort_unless($importItem->import_batch_id === $importBatch->id, 404);
         $product = $action->handle($importItem, $request->validated());
 
-        return back()->with('success', "{$product->name} is now published in the shop.");
+        $notice = $product->unit_price === null
+            ? ' Price is missing. Add it later in Missing prices.'
+            : '';
+
+        return back()->with('success', "{$product->name} is now published in the shop.".$notice);
     }
 }

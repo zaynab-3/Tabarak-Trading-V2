@@ -6,8 +6,8 @@ import StatusBadge from '@/Components/Admin/StatusBadge.vue';
 import ConfirmDialog from '@/Components/Shared/ConfirmDialog.vue';
 import type { ImportItem, ImportPublishDraft, TaxonomyRef } from '@/types/catalogue';
 
-const props = defineProps<{ item: ImportItem; categories: TaxonomyRef[]; batchBusy?: boolean }>();
-const emit = defineEmits<{ draft: [id: number, draft: ImportPublishDraft | null] }>();
+const props = defineProps<{ item: ImportItem; categories: TaxonomyRef[]; batchBusy?: boolean; quantityCommand?: { value: boolean; revision: number } }>();
+const emit = defineEmits<{ draft: [id: number, draft: ImportPublishDraft | null]; busy: [id: number, busy: boolean] }>();
 
 const reviewDialog = ref<HTMLDialogElement | null>(null);
 const reviewMounted = ref(false);
@@ -52,7 +52,10 @@ const suggestedFormValues = () => {
 const form = useForm({
     ...suggestedFormValues(),
     unit_price: '' as string | number,
-    allows_open_quantity: false,
+    allows_open_quantity: props.quantityCommand?.value ?? false,
+});
+watch(() => props.quantityCommand?.revision, () => {
+    if (props.quantityCommand && canReview.value) form.allows_open_quantity = props.quantityCommand.value;
 });
 
 // Update fields that still contain the previous AI suggestion as results arrive.
@@ -70,6 +73,7 @@ const canQuickPublish = computed(() => canReview.value && !!form.name.trim());
 const rowCategory = computed(() => props.categories.find(category => category.id === Number(form.category_id))?.name ?? 'Uncategorized');
 const draft = computed<ImportPublishDraft | null>(() => canQuickPublish.value && priceValid.value && !form.processing && !deleteForm.processing ? { id: props.item.id, ...form.data() } : null);
 watch(draft, (value) => emit('draft', props.item.id, value), { immediate: true });
+watch(() => form.processing || deleteForm.processing, value => emit('busy', props.item.id, value));
 const focusNextPrice = (event: KeyboardEvent) => {
     const inputs = Array.from(document.querySelectorAll<HTMLInputElement>('[data-import-price]')).filter(input => !input.disabled && input.offsetParent !== null);
     const index = inputs.indexOf(event.currentTarget as HTMLInputElement);

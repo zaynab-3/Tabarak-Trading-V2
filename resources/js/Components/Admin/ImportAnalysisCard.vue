@@ -47,7 +47,12 @@ const openReview = () => {
         form.defaults(suggestedFormValues());
         form.reset();
     }
-    if (!reviewDialog.value?.open) reviewDialog.value?.showModal();
+    const dialog = reviewDialog.value;
+    if (dialog && !dialog.open) {
+        dialog.showModal();
+        dialog.querySelectorAll<HTMLElement>('.review-panel').forEach((panel) => { panel.scrollTop = 0; });
+        dialog.querySelector<HTMLButtonElement>('[data-review-close]')?.focus({ preventScroll: true });
+    }
 };
 
 const closeReview = () => {
@@ -180,7 +185,7 @@ const confidenceLabel = (confidence: string | null) => {
                 v-if="canReview"
                 ref="reviewDialog"
                 :aria-labelledby="`import-review-title-${item.id}`"
-                class="m-auto max-h-[90dvh] w-11/12 max-w-5xl overflow-y-auto overscroll-contain rounded-2xl border border-tabarak-line bg-white p-0 text-left text-tabarak-ink shadow-2xl backdrop:bg-slate-950/55"
+                class="review-dialog m-auto w-11/12 max-w-5xl rounded-2xl border border-tabarak-line bg-white p-0 text-left text-tabarak-ink shadow-2xl backdrop:bg-slate-950/55"
                 @cancel.prevent="closeReview"
             >
                 <header class="flex items-start justify-between gap-3 border-b border-tabarak-line px-5 py-4 sm:px-6">
@@ -189,10 +194,10 @@ const confidenceLabel = (confidence: string | null) => {
                         <h2 :id="`import-review-title-${item.id}`" class="mt-1 font-display text-xl font-bold">Review product</h2>
                         <p class="mt-1 text-sm text-slate-600">Check the AI analysis, correct the details, then publish.</p>
                     </div>
-                    <button type="button" class="grid size-10 shrink-0 place-items-center rounded-lg hover:bg-tabarak-mist" aria-label="Close review" :disabled="form.processing" @click="closeReview"><X class="size-5" /></button>
+                    <button type="button" class="grid size-10 shrink-0 place-items-center rounded-lg hover:bg-tabarak-mist" data-review-close aria-label="Close review" :disabled="form.processing" @click="closeReview"><X class="size-5" /></button>
                 </header>
-                <div class="grid items-start gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                    <section class="min-w-0 space-y-4 select-text" aria-label="AI detected information">
+                <div class="review-body">
+                    <section class="review-panel review-reference min-w-0 space-y-4 select-text p-5 sm:p-6" aria-label="AI detected information" tabindex="0">
                         <div class="rounded-xl bg-tabarak-mist p-3">
                             <img :src="item.media.url" :alt="item.media.alt_text || `Import image ${item.id}`" class="mx-auto h-48 w-full object-contain sm:h-56" />
                         </div>
@@ -222,10 +227,11 @@ const confidenceLabel = (confidence: string | null) => {
                             </ul>
                         </div>
                     </section>
-                    <section class="min-w-0 space-y-4 lg:border-l lg:border-tabarak-line lg:pl-6" aria-label="Editable product details">
+                    <section class="review-panel min-w-0 space-y-4 p-5 sm:p-6" aria-label="Editable product details" tabindex="0">
                         <h3 class="font-display text-lg font-bold">Product details</h3>
                         <p class="text-xs leading-5 text-slate-500">These details will appear in the shop.</p>
                         <form
+                            :id="`import-review-form-${item.id}`"
                             class="min-w-0 space-y-4"
                             :aria-busy="form.processing"
                             @submit.prevent="publish"
@@ -241,7 +247,7 @@ const confidenceLabel = (confidence: string | null) => {
                                 />
                                 <span v-if="form.errors.name" class="mt-1 block text-xs text-red-600">{{ form.errors.name }}</span>
                             </label>
-            
+
                             <label class="block">
                                 <span class="field-label">Brand</span>
                                 <input
@@ -253,7 +259,7 @@ const confidenceLabel = (confidence: string | null) => {
                                 <span class="mt-1 block text-xs text-slate-500">Existing brands are reused; a new brand is created only when needed.</span>
                                 <span v-if="form.errors.brand" class="mt-1 block text-xs text-red-600">{{ form.errors.brand }}</span>
                             </label>
-            
+
                             <label class="block">
                                 <span class="field-label">Existing category</span>
                                 <select v-model="form.category_id" class="field-input" aria-label="Existing category">
@@ -262,7 +268,7 @@ const confidenceLabel = (confidence: string | null) => {
                                 </select>
                                 <span v-if="form.errors.category_id" class="mt-1 block text-xs text-red-600">{{ form.errors.category_id }}</span>
                             </label>
-            
+
                             <div class="grid grid-cols-[1fr_auto] gap-3">
                                 <label class="block">
                                     <span class="field-label">Pack quantity</span>
@@ -276,7 +282,7 @@ const confidenceLabel = (confidence: string | null) => {
                                     />
                                     <span v-if="form.errors.pack_quantity" class="mt-1 block text-xs text-red-600">{{ form.errors.pack_quantity }}</span>
                                 </label>
-            
+
                                 <label class="flex items-end gap-2 pb-3 text-xs font-bold text-tabarak-ink">
                                     <input
                                         v-model="form.allows_open_quantity"
@@ -286,15 +292,17 @@ const confidenceLabel = (confidence: string | null) => {
                                     Open quantity
                                 </label>
                             </div>
-            
-                            <button class="btn-secondary w-full" type="button" :disabled="form.processing" @click="closeReview">Cancel</button>
-                            <button class="btn-primary w-full" type="submit" :disabled="form.processing || deleteForm.processing || !form.name.trim()">
-                                <Send class="size-4" />
-                                {{ form.processing ? 'Publishing…' : 'Publish to shop' }}
-                            </button>
+
                         </form>
                     </section>
                 </div>
+                <footer class="flex flex-wrap items-center justify-end gap-2 border-t border-tabarak-line bg-white px-5 py-3 sm:px-6">
+                    <button class="btn-secondary flex-1 sm:flex-none" type="button" :disabled="form.processing" @click="closeReview">Cancel</button>
+                    <button class="btn-primary flex-1 sm:flex-none" type="submit" :form="`import-review-form-${item.id}`" :disabled="form.processing || deleteForm.processing || !form.name.trim()">
+                        <Send class="size-4" />
+                        {{ form.processing ? 'Publishing…' : 'Publish to shop' }}
+                    </button>
+                </footer>
             </dialog>
         </Teleport>
 
@@ -309,3 +317,49 @@ const confidenceLabel = (confidence: string | null) => {
         />
     </article>
 </template>
+
+<style scoped>
+.review-dialog {
+    height: min(760px, calc(100vh - 32px));
+    height: min(760px, calc(100dvh - 32px));
+    max-height: none;
+    overflow: hidden;
+}
+
+.review-dialog[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.review-body {
+    display: grid;
+    min-height: 0;
+    min-width: 0;
+    grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    overflow: hidden;
+}
+
+.review-panel {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
+
+.review-reference {
+    border-bottom: 1px solid #e5e2dc;
+}
+
+@media (min-width: 768px) {
+    .review-body {
+        grid-template-rows: minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .review-reference {
+        border-bottom: 0;
+        border-right: 1px solid #e5e2dc;
+    }
+}
+</style>

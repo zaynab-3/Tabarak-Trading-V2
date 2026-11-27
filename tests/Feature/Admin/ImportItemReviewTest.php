@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Enums\ImportItemStatus;
 use App\Jobs\AnalyzeImportItem;
 use App\Models\ImportItem;
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -56,6 +57,7 @@ class ImportItemReviewTest extends TestCase
                     'category_id' => null,
                     'pack_quantity' => 12,
                     'allows_open_quantity' => true,
+                    'unit_price' => '18.75',
                 ],
             )
             ->assertSessionHasNoErrors();
@@ -64,6 +66,7 @@ class ImportItemReviewTest extends TestCase
             'name' => 'Manual Cashews',
             'pack_quantity' => 12,
             'allows_open_quantity' => true,
+            'unit_price' => 18.75,
         ]);
 
         $this->assertDatabaseHas('brands', [
@@ -74,6 +77,66 @@ class ImportItemReviewTest extends TestCase
             'id' => $item->id,
             'status' => ImportItemStatus::Approved->value,
         ]);
+    }
+
+    public function test_review_persists_corrected_ai_fields_and_validates_price(): void
+    {
+        Storage::fake('public');
+        Queue::fake();
+
+        $admin = User::factory()->admin()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+
+        $this->actingAs($admin)->post(route('admin.imports.store'), [
+            'name' => 'Priced review',
+            'images' => [UploadedFile::fake()->image('peach.jpg')],
+        ])->assertSessionHasNoErrors();
+
+        $item = ImportItem::query()->firstOrFail();
+        $item->update([
+            'status' => ImportItemStatus::Review,
+            'suggested_name' => 'Peach Candy',
+            'suggested_weight' => '75g',
+            'suggested_metadata' => ['description' => 'Candy', 'detected_text' => 'Peach', 'sku' => 'OLD-SKU'],
+        ]);
+
+        $url = route('admin.imports.items.publish.store', [$item->import_batch_id, $item->id]);
+        $data = [
+            'name' => 'Peach Ice Cream',
+            'category_id' => $category->id,
+            'brand' => null,
+            'pack_quantity' => 12,
+            'allows_open_quantity' => true,
+            'sku' => 'PEACH-NEW',
+            'short_description' => 'Peach flavored ice cream',
+            'description' => 'Corrected package text',
+            'weight_value' => 80,
+            'weight_unit' => 'g',
+            'unit_price' => '12.50',
+        ];
+
+        foreach (['-1', '0', '12.345'] as $invalid) {
+            $this->actingAs($admin)->post($url, array_replace($data, ['unit_price' => $invalid]))
+                ->assertSessionHasErrors('unit_price');
+        }
+
+        $this->assertDatabaseCount('products', 0);
+
+        $this->actingAs($admin)->post($url, $data)->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('products', [
+            'name' => 'Peach Ice Cream',
+            'category_id' => $category->id,
+            'sku' => 'PEACH-NEW',
+            'short_description' => 'Peach flavored ice cream',
+            'description' => 'Corrected package text',
+            'weight_value' => 80,
+            'weight_unit' => 'g',
+            'unit_price' => 12.50,
+            'pack_quantity' => 12,
+        ]);
+
+        $this->assertSame(ImportItemStatus::Approved, $item->fresh()->status);
     }
 
     public function test_unapproved_import_item_can_be_deleted_with_orphaned_media(): void

@@ -4,18 +4,28 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\ImportItemStatus;
 use App\Jobs\AnalyzeImportItem;
-use App\Models\ImportItem;
 use App\Models\Category;
+use App\Models\ImportItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class ImportItemReviewTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Keep test requests independent of a deployment URL or subdirectory.
+        URL::forceRootUrl('http://localhost');
+        URL::forceScheme('http');
+    }
 
     public function test_review_item_without_ai_name_can_be_published_with_manual_values(): void
     {
@@ -30,8 +40,9 @@ class ImportItemReviewTest extends TestCase
                 'images' => [
                     UploadedFile::fake()->image('unknown-product.jpg'),
                 ],
-            ])
-            ->assertSessionHasNoErrors();
+            ], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->assertJsonStructure(['batch_id', 'upload_url', 'show_url']);
 
         Queue::assertPushed(AnalyzeImportItem::class);
 
@@ -90,7 +101,9 @@ class ImportItemReviewTest extends TestCase
         $this->actingAs($admin)->post(route('admin.imports.store'), [
             'name' => 'Priced review',
             'images' => [UploadedFile::fake()->image('peach.jpg')],
-        ])->assertSessionHasNoErrors();
+        ], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->assertJsonStructure(['batch_id', 'upload_url', 'show_url']);
 
         $item = ImportItem::query()->firstOrFail();
         $item->update([
@@ -152,8 +165,9 @@ class ImportItemReviewTest extends TestCase
                 'images' => [
                     UploadedFile::fake()->image('bad-import.jpg'),
                 ],
-            ])
-            ->assertSessionHasNoErrors();
+            ], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->assertJsonStructure(['batch_id', 'upload_url', 'show_url']);
 
         $item = ImportItem::query()
             ->with('media')

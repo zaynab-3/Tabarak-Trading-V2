@@ -23,16 +23,18 @@ class ApproveImportItem
     /** @param array<string, mixed> $overrides */
     public function handle(ImportItem $item, array $overrides = []): Product
     {
-        if ($item->approvedProduct) {
-            return $item->approvedProduct;
-        }
-
-        if (! in_array($item->status, [ImportItemStatus::Review, ImportItemStatus::Failed], true)
-            || blank($overrides['name'] ?? $item->suggested_name)) {
-            throw new LogicException('Only reviewable items with a product name can be published.');
-        }
-
         $product = DB::transaction(function () use ($item, $overrides): Product {
+            $item = ImportItem::query()->lockForUpdate()->findOrFail($item->id);
+
+            if ($item->approvedProduct) {
+                return $item->approvedProduct;
+            }
+
+            if (! in_array($item->status, [ImportItemStatus::Review, ImportItemStatus::Failed], true)
+                || blank($overrides['name'] ?? $item->suggested_name)) {
+                throw new LogicException('Only reviewable items with a product name can be published.');
+            }
+
             $product = $this->createProduct->handle($this->productData->make($item, $overrides));
             $this->attachMedia->handle($product, $item->media);
             $product->loadMissing(['brand:id,name', 'category:id,name']);

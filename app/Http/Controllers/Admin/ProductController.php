@@ -9,18 +9,21 @@ use App\Actions\Products\UpdateProduct;
 use App\DTOs\ProductData;
 use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Products\ExportProductsRequest;
 use App\Http\Requests\Products\ProductIndexRequest;
 use App\Http\Requests\Products\StoreProductRequest;
 use App\Http\Requests\Products\UpdateProductRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\Products\ProductExcelExport;
 use App\Services\Products\ProductPresenter;
 use App\Services\Products\ProductQueryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProductController extends Controller
 {
@@ -32,8 +35,24 @@ class ProductController extends Controller
         return Inertia::render('Admin/Products/Index', [
             'products' => $queries->admin($filters)->latest()->paginate(15)->withQueryString()->through(fn ($product) => $presenter->summary($product)),
             'filters' => $filters,
+            'exportColumns' => collect(ProductExcelExport::columns())->map(fn ($column, $key) => ['key' => $key, 'label' => $column['label']])->values(),
             ...$this->formOptions(),
         ]);
+    }
+
+    public function export(ExportProductsRequest $request, ProductQueryService $queries, ProductExcelExport $export): BinaryFileResponse
+    {
+        Gate::authorize('viewAny', Product::class);
+        $data = $request->validated();
+        $filters = $data['scope'] === 'filtered' ? $data : [];
+        $query = $queries->admin($filters)->setEagerLoads([])
+            ->with(['brand:id,name', 'category:id,name']);
+        $path = $export->create($query, $data['columns']);
+
+        return response()->download($path, 'Tabarak-Products-'.now('America/Detroit')->format('Y-m-d-His').'.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'private, no-store',
+        ])->deleteFileAfterSend(true);
     }
 
     public function create(): Response

@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Enums\ImportItemStatus;
 use App\Jobs\AnalyzeImportItem;
 use App\Models\Category;
+use App\Models\ImportBatch;
 use App\Models\ImportItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -178,6 +179,65 @@ class ImportItemReviewTest extends TestCase
         ]);
 
         $this->assertSame(ImportItemStatus::Approved, $item->fresh()->status);
+    }
+
+    public function test_priced_batch_publishes_individual_prices_and_leaves_unpriced_items(): void
+    {
+        Queue::fake();
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.imports.store'), [
+            'name' => '100 item batch',
+            'images' => [UploadedFile::fake()->image('bulk.jpg')],
+        ], ['Accept' => 'application/json'])->assertCreated();
+
+        $batch = ImportBatch::query()->findOrFail($response->json('batch_id'));
+        $first = $batch->items()->firstOrFail();
+        $first->update(['status' => ImportItemStatus::Review, 'suggested_name' => 'Product 1']);
+        $drafts = [];
+        for ($i = 1; $i <= 100; $i++) {
+            $item = $i === 1 ? $first : $batch->items()->create([
+                'media_id' => $first->media_id,
+                'status' => ImportItemStatus::Review,
+                'suggested_name' => 'Product '.$i,
+            ]);
+            if ($i !== 100) {
+                $drafts[] = [
+                    'id' => $item->id,
+                    'name' => 'Corrected product '.$i,
+                    'sku' => null,
+                    'unit_price' => number_format($i + 0.25, 2, '.', ''),
+                    'allows_open_quantity' => $i === 2,
+                ];
+            }
+        }
+
+        $otherBatch = ImportBatch::query()->create(['created_by' => $admin->id, 'name' => 'Other batch']);
+        $foreign = $otherBatch->items()->create([
+            'media_id' => $first->media_id,
+            'status' => ImportItemStatus::Review,
+            'suggested_name' => 'Other product',
+        ]);
+        $url = route('admin.imports.publish.store', $batch);
+
+        $bad = $drafts;
+        $bad[1]['unit_price'] = null;
+        $this->actingAs($admin)->postJson($url, ['items' => $bad])
+            ->assertUnprocessable()->assertJsonValidationErrors('items.1.unit_price');
+        $bad = $drafts;
+        $bad[1]['id'] = $foreign->id;
+        $this->actingAs($admin)->postJson($url, ['items' => $bad])
+            ->assertUnprocessable()->assertJsonValidationErrors('items.1.id');
+        $this->assertDatabaseCount('products', 0);
+
+        $this->actingAs($admin)->postJson($url, ['items' => $drafts])->assertRedirect();
+        $this->assertDatabaseCount('products', 99);
+        $this->assertDatabaseHas('products', ['name' => 'Corrected product 1', 'unit_price' => 1.25]);
+        $this->assertDatabaseHas('products', ['name' => 'Corrected product 2', 'unit_price' => 2.25, 'allows_open_quantity' => true]);
+        $this->assertDatabaseHas('products', ['name' => 'Corrected product 99', 'unit_price' => 99.25]);
+        $this->assertSame(1, $batch->items()->where('status', ImportItemStatus::Review)->count());
+        $this->assertSame(99, $batch->fresh()->approved_items);
+        $this->assertSame(ImportItemStatus::Review, $foreign->fresh()->status);
     }
 
     public function test_unapproved_import_item_can_be_deleted_with_orphaned_media(): void

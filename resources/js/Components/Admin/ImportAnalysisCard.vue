@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link, useForm } from '@inertiajs/vue3';
 import { AlertTriangle, ExternalLink, Pencil, Send, Trash2, X } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import StatusBadge from '@/Components/Admin/StatusBadge.vue';
 import ConfirmDialog from '@/Components/Shared/ConfirmDialog.vue';
 import type { ImportItem, TaxonomyRef } from '@/types/catalogue';
@@ -30,23 +30,43 @@ const detectedPackQuantity = () => {
     return match ? Number(match[0]) : '';
 };
 
-const suggestedFormValues = () => ({
-    name: props.item.suggested_name ?? '',
-    brand: props.item.suggested_brand ?? '',
-    category_id: matchedCategory.value?.id ?? '',
-    pack_quantity: detectedPackQuantity(),
+const suggestedFormValues = () => {
+    const metadata = props.item.suggested_metadata;
+    const weight = (props.item.suggested_weight ?? '').match(/(\d+(?:[.,]\d+)?)\s*(kg|g|ml|l|oz)\b/i);
+    return {
+        name: props.item.suggested_name ?? '',
+        brand: props.item.suggested_brand ?? '',
+        category_id: matchedCategory.value?.id ?? '',
+        pack_quantity: detectedPackQuantity(),
+        sku: metadata?.sku ?? '',
+        short_description: metadata?.description?.slice(0, 500) ?? '',
+        description: metadata?.detected_text ? `Visible package text: ${metadata.detected_text}`.slice(0, 10000) : '',
+        weight_value: weight ? Number(weight[1].replace(',', '.')) : '',
+        weight_unit: weight?.[2]?.toLowerCase() ?? '',
+    };
+};
+
+const form = useForm({
+    ...suggestedFormValues(),
+    unit_price: '' as string | number,
     allows_open_quantity: false,
 });
 
-const form = useForm(suggestedFormValues());
+// Update fields that still contain the previous AI suggestion as results arrive.
+// A price or manually corrected field never prevents other suggestions from loading.
+watch(suggestedFormValues, (next, previous) => {
+    for (const key of Object.keys(next) as (keyof typeof next)[]) {
+        if (form[key] === previous[key]) Object.assign(form, { [key]: next[key] });
+    }
+});
+
+const priceValid = computed(() => /^\d+(?:\.\d{1,2})?$/.test(String(form.unit_price))
+    && Number(form.unit_price) >= 0.01 && Number(form.unit_price) <= 9999999999.99);
+const canQuickPublish = computed(() => canReview.value && props.item.status === 'review' && !!props.item.suggested_name?.trim());
 const deleteForm = useForm({});
 
 const openReview = () => {
     if (!canReview.value || form.processing || deleteForm.processing) return;
-    if (!form.isDirty) {
-        form.defaults(suggestedFormValues());
-        form.reset();
-    }
     const dialog = reviewDialog.value;
     if (dialog && !dialog.open) {
         dialog.showModal();
@@ -60,10 +80,10 @@ const closeReview = () => {
 };
 
 const publish = () => {
-    if (!canReview.value || form.processing || deleteForm.processing || !form.name.trim()) return;
+    if (!canReview.value || form.processing || deleteForm.processing || !form.name.trim() || !priceValid.value) return;
     form.post(
         route('admin.imports.items.publish.store', [props.item.import_batch_id, props.item.id]),
-        { preserveScroll: true, onSuccess: () => reviewDialog.value?.close() },
+        { preserveScroll: true, onSuccess: () => reviewDialog.value?.close(), onError: () => openReview() },
     );
 };
 
@@ -139,6 +159,22 @@ const confidenceLabel = (confidence: string | null) => {
             <div v-else-if="item.suggested_name && !matchedCategory" class="mt-3 flex items-start gap-2 border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
                 <AlertTriangle class="mt-0.5 size-4 shrink-0" />
                 <span>AI could not assign <strong>{{ item.suggested_name }}</strong> to one of your existing categories. Open Review to choose one or leave it Uncategorized.</span>
+            </div>
+
+            <div v-if="canReview" class="mt-4 space-y-2 rounded-xl border border-tabarak-line p-3">
+                <label class="block">
+                    <span class="field-label">Price (USD)</span>
+                    <input v-model="form.unit_price" class="field-input" type="number" inputmode="decimal" min="0.01" max="9999999999.99" step="0.01" placeholder="0.00" :disabled="form.processing || deleteForm.processing" />
+                </label>
+                <label class="flex items-center gap-2 text-xs font-bold">
+                    <input v-model="form.allows_open_quantity" type="checkbox" class="rounded border-tabarak-line" :disabled="form.processing || deleteForm.processing" />
+                    Open quantity
+                </label>
+                <p v-if="form.errors.unit_price" class="text-xs text-red-600">{{ form.errors.unit_price }}</p>
+                <button v-if="canQuickPublish" type="button" class="btn-primary w-full" :disabled="!priceValid || !form.name.trim() || form.processing || deleteForm.processing" @click="publish">
+                    <Send class="size-4" /> {{ form.processing ? 'Publishing…' : 'Publish to shop' }}
+                </button>
+                <p v-if="canQuickPublish" class="text-xs leading-5 text-slate-500">If the detected details are correct, enter the selling price and publish. Use Review to make corrections first.</p>
             </div>
 
             <div
@@ -249,6 +285,12 @@ const confidenceLabel = (confidence: string | null) => {
                             </label>
 
                             <label class="block">
+                                <span class="field-label">Price (USD)</span>
+                                <input v-model="form.unit_price" class="field-input" type="number" inputmode="decimal" min="0.01" max="9999999999.99" step="0.01" placeholder="0.00" required />
+                                <span v-if="form.errors.unit_price" class="mt-1 block text-xs text-red-600">{{ form.errors.unit_price }}</span>
+                            </label>
+
+                            <label class="block">
                                 <span class="field-label">Brand</span>
                                 <input
                                     v-model="form.brand"
@@ -267,6 +309,37 @@ const confidenceLabel = (confidence: string | null) => {
                                     <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
                                 </select>
                                 <span v-if="form.errors.category_id" class="mt-1 block text-xs text-red-600">{{ form.errors.category_id }}</span>
+                            </label>
+
+                            <label class="block">
+                                <span class="field-label">SKU / Item code</span>
+                                <input v-model="form.sku" class="field-input" maxlength="100" placeholder="Optional" />
+                                <span v-if="form.errors.sku" class="mt-1 block text-xs text-red-600">{{ form.errors.sku }}</span>
+                            </label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="block">
+                                    <span class="field-label">Net weight</span>
+                                    <input v-model="form.weight_value" class="field-input" type="number" min="0" max="99999999.99" step="any" placeholder="Optional" />
+                                    <span v-if="form.errors.weight_value" class="mt-1 block text-xs text-red-600">{{ form.errors.weight_value }}</span>
+                                </label>
+                                <label class="block">
+                                    <span class="field-label">Weight unit</span>
+                                    <select v-model="form.weight_unit" class="field-input">
+                                        <option value="">Select unit</option>
+                                        <option v-for="unit in ['g', 'kg', 'ml', 'l', 'oz']" :key="unit" :value="unit">{{ unit }}</option>
+                                    </select>
+                                    <span v-if="form.errors.weight_unit" class="mt-1 block text-xs text-red-600">{{ form.errors.weight_unit }}</span>
+                                </label>
+                            </div>
+                            <label class="block">
+                                <span class="field-label">Short description</span>
+                                <textarea v-model="form.short_description" class="field-input min-h-24" maxlength="500" placeholder="Optional"></textarea>
+                                <span v-if="form.errors.short_description" class="mt-1 block text-xs text-red-600">{{ form.errors.short_description }}</span>
+                            </label>
+                            <label class="block">
+                                <span class="field-label">Description / Package text</span>
+                                <textarea v-model="form.description" class="field-input min-h-24" maxlength="10000" placeholder="Optional"></textarea>
+                                <span v-if="form.errors.description" class="mt-1 block text-xs text-red-600">{{ form.errors.description }}</span>
                             </label>
 
                             <div class="grid grid-cols-[1fr_auto] gap-3">
@@ -298,7 +371,7 @@ const confidenceLabel = (confidence: string | null) => {
                 </div>
                 <footer class="flex flex-wrap items-center justify-end gap-2 border-t border-tabarak-line bg-white px-5 py-3 sm:px-6">
                     <button class="btn-secondary flex-1 sm:flex-none" type="button" :disabled="form.processing" @click="closeReview">Cancel</button>
-                    <button class="btn-primary flex-1 sm:flex-none" type="submit" :form="`import-review-form-${item.id}`" :disabled="form.processing || deleteForm.processing || !form.name.trim()">
+                    <button class="btn-primary flex-1 sm:flex-none" type="submit" :form="`import-review-form-${item.id}`" :disabled="form.processing || deleteForm.processing || !form.name.trim() || !priceValid">
                         <Send class="size-4" />
                         {{ form.processing ? 'Publishing…' : 'Publish to shop' }}
                     </button>

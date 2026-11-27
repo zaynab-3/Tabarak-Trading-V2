@@ -11,6 +11,7 @@ const emit = defineEmits<{ draft: [id: number, draft: ImportPublishDraft | null]
 
 const reviewDialog = ref<HTMLDialogElement | null>(null);
 const reviewMounted = ref(false);
+const mobileReviewTab = ref<'details' | 'analysis'>('details');
 const confirmingDelete = ref(false);
 
 const matchedCategory = computed(() => props.categories.find(
@@ -81,6 +82,7 @@ const focusNextPrice = (event: KeyboardEvent) => {
 
 const openReview = async () => {
     if (!canReview.value || deleteForm.processing || props.batchBusy) return;
+    mobileReviewTab.value = 'details';
     reviewMounted.value = true;
     await nextTick();
     const dialog = reviewDialog.value;
@@ -131,7 +133,7 @@ const confidenceLabel = (confidence: string | null) => {
         <button type="button" class="import-thumbnail rounded-lg bg-tabarak-mist p-1" :disabled="!canReview || batchBusy" :aria-label="'Review image for item ' + item.id" @click="openReview">
             <img :src="item.media.url" :alt="item.media.alt_text || 'Import image ' + item.id" loading="lazy" decoding="async" class="h-full w-full object-contain" />
         </button>
-        <div class="min-w-0">
+        <div class="import-summary min-w-0">
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span class="text-[11px] font-semibold text-slate-400">#{{ item.id }}</span>
                 <StatusBadge :status="item.status === 'approved' ? 'published' : item.status" />
@@ -149,7 +151,7 @@ const confidenceLabel = (confidence: string | null) => {
                 <span class="sr-only">Price in USD for item {{ item.id }}</span>
                 <div class="flex items-center gap-1 rounded-lg border border-tabarak-line bg-white px-2 focus-within:ring-1 focus-within:ring-tabarak-blue">
                     <span class="text-xs text-slate-500">$</span>
-                    <input v-model="form.unit_price" data-import-price class="min-w-0 w-full border-0 bg-transparent px-0 py-2 text-sm font-semibold focus:ring-0" type="number" inputmode="decimal" min="0.01" max="9999999999.99" step="0.01" placeholder="0.00" :disabled="form.processing || deleteForm.processing || batchBusy" @keydown.enter.prevent="focusNextPrice" />
+                    <input v-model="form.unit_price" data-import-price class="import-price-input min-w-0 w-full border-0 bg-transparent px-0 py-2 font-semibold focus:ring-0" type="number" inputmode="decimal" min="0.01" max="9999999999.99" step="0.01" placeholder="0.00" :disabled="form.processing || deleteForm.processing || batchBusy" @keydown.enter.prevent="focusNextPrice" />
                 </div>
             </label>
             <label class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600">
@@ -163,7 +165,7 @@ const confidenceLabel = (confidence: string | null) => {
         <div class="import-actions flex flex-wrap items-center justify-end gap-1.5">
             <button v-if="canReview" type="button" class="btn-secondary !min-h-9 !px-3 !py-1 text-xs" :disabled="form.processing || deleteForm.processing || batchBusy" @click="openReview"><Pencil class="size-3.5" /> Review</button>
             <button v-if="canQuickPublish" type="button" class="btn-primary !min-h-9 !px-3 !py-1 text-xs" :disabled="!priceValid || form.processing || deleteForm.processing || batchBusy" @click="publish"><Send class="size-3.5" /> {{ form.processing ? 'Saving…' : 'Publish' }}</button>
-            <button v-if="canDelete" type="button" class="grid size-9 place-items-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50" :disabled="deleteForm.processing || form.processing || batchBusy" :aria-label="'Delete item ' + item.id" title="Delete item" @click="confirmingDelete = true"><Trash2 class="size-4" /></button>
+            <button v-if="canDelete" type="button" class="import-delete grid size-9 place-items-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50" :disabled="deleteForm.processing || form.processing || batchBusy" :aria-label="'Delete item ' + item.id" title="Delete item" @click="confirmingDelete = true"><Trash2 class="size-4" /></button>
             <Link v-if="item.status === 'approved' && item.approved_product" :href="route('admin.products.edit', item.approved_product.slug)" class="btn-secondary !min-h-9 !px-3 !py-1 text-xs">Edit <ExternalLink class="size-3.5" /></Link>
         </div>
 
@@ -184,8 +186,12 @@ const confidenceLabel = (confidence: string | null) => {
                     </div>
                     <button type="button" class="grid size-10 shrink-0 place-items-center rounded-lg hover:bg-tabarak-mist" data-review-close aria-label="Close review" :disabled="form.processing" @click="closeReview"><X class="size-5" /></button>
                 </header>
+                <div class="review-mobile-tabs grid grid-cols-2 gap-1 border-b border-tabarak-line bg-tabarak-mist p-2" aria-label="Review sections">
+                    <button type="button" class="rounded-lg px-2 py-2.5 text-sm font-semibold" :class="mobileReviewTab === 'details' ? 'bg-white text-tabarak-ink shadow-sm' : 'text-slate-500'" :aria-pressed="mobileReviewTab === 'details'" @click="mobileReviewTab = 'details'">Product details</button>
+                    <button type="button" class="rounded-lg px-2 py-2.5 text-sm font-semibold" :class="mobileReviewTab === 'analysis' ? 'bg-white text-tabarak-ink shadow-sm' : 'text-slate-500'" :aria-pressed="mobileReviewTab === 'analysis'" @click="mobileReviewTab = 'analysis'">AI analysis</button>
+                </div>
                 <div class="review-body">
-                    <section class="review-panel review-reference min-w-0 space-y-4 select-text p-5 sm:p-6" aria-label="AI detected information" tabindex="0">
+                    <section class="review-panel review-reference min-w-0 space-y-4 select-text p-4 sm:p-6" :class="{ 'mobile-panel-hidden': mobileReviewTab !== 'analysis' }" aria-label="AI detected information" tabindex="0">
                         <div class="rounded-xl bg-tabarak-mist p-3">
                             <img :src="item.media.url" :alt="item.media.alt_text || `Import image ${item.id}`" class="mx-auto h-48 w-full object-contain sm:h-56" />
                         </div>
@@ -215,7 +221,7 @@ const confidenceLabel = (confidence: string | null) => {
                             </ul>
                         </div>
                     </section>
-                    <section class="review-panel min-w-0 space-y-4 p-5 sm:p-6" aria-label="Editable product details" tabindex="0">
+                    <section class="review-panel min-w-0 space-y-4 p-4 sm:p-6" :class="{ 'mobile-panel-hidden': mobileReviewTab !== 'details' }" aria-label="Editable product details" tabindex="0">
                         <h3 class="font-display text-lg font-bold">Product details</h3>
                         <p class="text-xs leading-5 text-slate-500">These details will appear in the shop.</p>
                         <form
@@ -322,7 +328,7 @@ const confidenceLabel = (confidence: string | null) => {
                     </section>
                 </div>
                 <footer class="flex flex-wrap items-center justify-end gap-2 border-t border-tabarak-line bg-white px-5 py-3 sm:px-6">
-                    <button class="btn-secondary flex-1 sm:flex-none" type="button" :disabled="form.processing" @click="closeReview">Cancel</button>
+                    <button class="btn-secondary flex-1 sm:flex-none" type="button" :disabled="form.processing" @click="closeReview">Keep edits</button>
                     <button class="btn-primary flex-1 sm:flex-none" type="submit" :form="`import-review-form-${item.id}`" :disabled="form.processing || deleteForm.processing || !form.name.trim() || !priceValid">
                         <Send class="size-4" />
                         {{ form.processing ? 'Publishing…' : 'Publish to shop' }}
@@ -353,14 +359,14 @@ const confidenceLabel = (confidence: string | null) => {
 
 .review-dialog[open] {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
 }
 
 .review-body {
     display: grid;
     min-height: 0;
     min-width: 0;
-    grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-rows: minmax(0, 1fr);
     overflow: hidden;
 }
 
@@ -376,7 +382,14 @@ const confidenceLabel = (confidence: string | null) => {
     border-bottom: 1px solid #e5e2dc;
 }
 
+@media (max-width: 767px) {
+    .review-dialog { width: calc(100% - 16px); }
+    .mobile-panel-hidden { display: none; }
+    .review-panel :deep(input:not([type="checkbox"])), .review-panel :deep(select), .review-panel :deep(textarea) { font-size: 16px; }
+}
 @media (min-width: 768px) {
+    .review-dialog[open] { grid-template-rows: auto minmax(0, 1fr) auto; }
+    .review-mobile-tabs { display: none; }
     .review-body {
         grid-template-rows: minmax(0, 1fr);
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -396,9 +409,19 @@ const confidenceLabel = (confidence: string | null) => {
     padding: 10px 12px;
 }
 .import-thumbnail { width: 60px; height: 64px; }
-.import-price { grid-column: 2; }
-.import-actions { grid-column: 1 / -1; }
-@media (min-width: 768px) {
+.import-price { grid-column: 1 / -1; }
+.import-actions { grid-column: 1 / -1; justify-content: flex-start; }
+.import-price-input { font-size: 16px; min-height: 42px; }
+.import-summary { overflow-wrap: anywhere; }
+@container import-workspace (min-width: 480px) {
+    .import-row {
+        grid-template-columns: 64px minmax(0, 1fr) minmax(100px, 135px);
+        gap: 8px 12px;
+    }
+    .import-price { grid-column: auto; }
+    .import-actions { grid-column: 2 / -1; justify-content: flex-end; }
+}
+@container import-workspace (min-width: 690px) {
     .import-row {
         grid-template-columns: 64px minmax(0, 1fr) 112px 236px;
         gap: 14px;
@@ -406,5 +429,12 @@ const confidenceLabel = (confidence: string | null) => {
     }
     .import-thumbnail { width: 64px; height: 64px; }
     .import-price, .import-actions { grid-column: auto; }
+}
+@media (pointer: coarse) {
+    .import-actions button, .import-actions a { min-height: 44px !important; }
+    .import-delete { min-width: 44px; }
+    .import-price-input { min-height: 44px; }
+    .import-price input[type="checkbox"] { width: 20px; height: 20px; }
+    .review-panel :deep(input:not([type="checkbox"])), .review-panel :deep(select), .review-panel :deep(textarea) { font-size: 16px; }
 }
 </style>

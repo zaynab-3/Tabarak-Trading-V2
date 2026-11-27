@@ -81,11 +81,24 @@ class ProductExcelExport
                 if (++$row > 1048576) {
                     throw new RuntimeException('The catalogue exceeds Excel row limits. Export a filtered list.');
                 }
-                $write('<row r="'.$row.'">');
+                $values = [];
+                $lines = 1;
+                foreach ($columns as $key => $column) {
+                    $value = $values[$key] = $this->value($product, $key);
+                    if ($column['type'] === 'text' && $value !== null) {
+                        $wrapped = 0;
+                        foreach (preg_split('/\R/u', (string) $value) ?: [''] as $line) {
+                            $wrapped += max(1, (int) ceil(mb_strwidth($line) / max(1, $column['width'] - 3)));
+                        }
+                        $lines = max($lines, $wrapped);
+                    }
+                }
+                $height = min(120, max(20, $lines * 14 + 6));
+                $write('<row r="'.$row.'" ht="'.$height.'" customHeight="1">');
                 $index = 0;
                 foreach ($columns as $key => $column) {
                     $style = $column['type'] === 'money' ? ($row % 2 === 0 ? 4 : 5) : ($row % 2 === 0 ? 2 : 3);
-                    $write($this->cell($this->letter(++$index).$row, $this->value($product, $key), $column['type'], $style));
+                    $write($this->cell($this->letter(++$index).$row, $values[$key], $column['type'], $style));
                 }
                 $write('</row>');
             }

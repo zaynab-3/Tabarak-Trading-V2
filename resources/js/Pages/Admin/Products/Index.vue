@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Archive, Image as ImageIcon, Pencil, Plus, RotateCcw, Trash2 } from '@lucide/vue';
+import { Archive, Download, Image as ImageIcon, Pencil, Plus, RotateCcw, Trash2, X } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import ConfirmDialog from '@/Components/Shared/ConfirmDialog.vue';
 import DataTable from '@/Components/Admin/DataTable.vue';
@@ -19,9 +19,19 @@ const props = defineProps<{
     categories: TaxonomyRef[];
     brands: TaxonomyRef[];
     statuses: string[];
+    exportColumns: { key: string; label: string }[];
 }>();
 
 const { filters, apply, reset } = useProductFilters(route('admin.products.index'), props.filters);
+const exportDialog = ref<HTMLDialogElement | null>(null);
+const selectedColumns = ref<string[]>(['name', 'unit_price']);
+const exportScope = ref<'all' | 'filtered'>('all');
+const allColumnsSelected = computed(() => props.exportColumns.every(column => selectedColumns.value.includes(column.key)));
+const toggleAllColumns = (event: Event) => {
+    selectedColumns.value = (event.target as HTMLInputElement).checked ? props.exportColumns.map(column => column.key) : [];
+};
+const openExport = () => exportDialog.value?.showModal();
+const closeExport = () => exportDialog.value?.close();
 const pendingAction = ref<{ type: 'archive' | 'delete'; product: Product } | null>(null);
 const actionProcessing = ref(false);
 const dialogTitle = computed(() => pendingAction.value?.type === 'delete' ? 'Delete product permanently?' : 'Archive this product?');
@@ -43,6 +53,7 @@ const restore = (product: Product) => router.patch(route('admin.products.restore
     <Head title="Products" />
     <AdminLayout>
         <PageHeader eyebrow="Catalogue" title="Products" :description="`${products.total} products with fast search and focused filters.`">
+            <button type="button" class="btn-secondary" @click="openExport"><Download class="size-4" /> Export Excel</button>
             <Link :href="route('admin.products.create')" class="btn-primary"><Plus class="size-4" /> Add product</Link>
         </PageHeader>
 
@@ -99,6 +110,57 @@ const restore = (product: Product) => router.patch(route('admin.products.restore
             </DataTable>
         </div>
         <div class="mt-8"><Pagination :links="products.links" /></div>
+        <Teleport to="body">
+            <dialog ref="exportDialog" aria-labelledby="products-export-title" class="product-export-dialog m-auto rounded-2xl border border-tabarak-line bg-white p-0 text-tabarak-ink shadow-2xl backdrop:bg-slate-950/55" @cancel.prevent="closeExport">
+                <form :action="route('admin.products.export')" method="get" class="product-export-form">
+                    <header class="flex items-start justify-between gap-3 border-b border-tabarak-line p-4 sm:p-5">
+                        <div>
+                            <h2 id="products-export-title" class="font-display text-xl font-bold">Export products to Excel</h2>
+                            <p class="mt-1 text-sm text-slate-500">Choose exactly which information to include in one spreadsheet.</p>
+                        </div>
+                        <button type="button" aria-label="Close export" class="grid size-11 shrink-0 place-items-center rounded-lg hover:bg-tabarak-mist" @click="closeExport"><X class="size-5" /></button>
+                    </header>
+                    <div class="product-export-body space-y-5 p-4 sm:p-5">
+                        <fieldset class="space-y-2">
+                            <legend class="text-sm font-bold">Which products?</legend>
+                            <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border border-tabarak-line p-3" :class="{ 'bg-tabarak-mist': exportScope === 'all' }">
+                                <input v-model="exportScope" name="scope" value="all" type="radio" class="size-5 shrink-0 text-tabarak-blue focus:ring-tabarak-blue" />
+                                <span class="min-w-0"><strong class="block text-sm">All products</strong><span class="block text-xs text-slate-500">Entire catalogue, including drafts and archived products.</span></span>
+                            </label>
+                            <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border border-tabarak-line p-3" :class="{ 'bg-tabarak-mist': exportScope === 'filtered' }">
+                                <input v-model="exportScope" name="scope" value="filtered" type="radio" class="size-5 shrink-0 text-tabarak-blue focus:ring-tabarak-blue" />
+                                <span class="min-w-0"><strong class="block text-sm">Current filtered results ({{ products.total }})</strong><span class="block text-xs text-slate-500">All matching products across every page.</span></span>
+                            </label>
+                            <template v-if="exportScope === 'filtered'">
+                                <input v-if="props.filters.search" type="hidden" name="search" :value="props.filters.search" />
+                                <input v-if="props.filters.category" type="hidden" name="category" :value="props.filters.category" />
+                                <input v-if="props.filters.brand" type="hidden" name="brand" :value="props.filters.brand" />
+                                <input v-if="props.filters.status" type="hidden" name="status" :value="props.filters.status" />
+                            </template>
+                        </fieldset>
+                        <fieldset>
+                            <legend class="text-sm font-bold">Columns to export</legend>
+                            <label class="my-2 flex min-h-12 cursor-pointer items-center gap-3 rounded-lg bg-tabarak-mist p-3 text-sm font-bold">
+                                <input type="checkbox" class="size-5 rounded border-tabarak-line text-tabarak-blue focus:ring-tabarak-blue" :checked="allColumnsSelected" :indeterminate="selectedColumns.length > 0 && !allColumnsSelected" @change="toggleAllColumns" />
+                                Select all columns
+                                <span class="ml-auto text-xs font-normal text-slate-500">{{ selectedColumns.length }} / {{ exportColumns.length }}</span>
+                            </label>
+                            <div class="grid gap-2 sm:grid-cols-2">
+                                <label v-for="column in exportColumns" :key="column.key" class="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-lg border border-tabarak-line px-3 py-2 text-sm" :class="{ 'bg-tabarak-mist': selectedColumns.includes(column.key) }">
+                                    <input v-model="selectedColumns" type="checkbox" name="columns[]" :value="column.key" class="size-5 shrink-0 rounded border-tabarak-line text-tabarak-blue focus:ring-tabarak-blue" />
+                                    <span class="break-words">{{ column.label }}</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                        <p class="text-xs leading-5 text-slate-500">The Excel file includes one sheet, sortable headings and numeric USD prices. Missing prices stay blank.</p>
+                    </div>
+                    <footer class="flex flex-wrap items-center justify-end gap-2 border-t border-tabarak-line bg-white p-4 sm:px-5">
+                        <button type="button" class="btn-secondary flex-1 sm:flex-none" @click="closeExport">Cancel</button>
+                        <button type="submit" class="btn-primary flex-1 sm:flex-none" :disabled="!selectedColumns.length"><Download class="size-4" /> Download Excel</button>
+                    </footer>
+                </form>
+            </dialog>
+        </Teleport>
         <ConfirmDialog
             :open="Boolean(pendingAction)"
             :title="dialogTitle"
@@ -111,3 +173,24 @@ const restore = (product: Product) => router.patch(route('admin.products.restore
         />
     </AdminLayout>
 </template>
+
+<style scoped>
+.product-export-dialog {
+    width: min(680px, calc(100% - 24px));
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow: hidden;
+}
+.product-export-form {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    max-height: calc(100vh - 26px);
+    max-height: calc(100dvh - 26px);
+    min-height: 0;
+}
+.product-export-body {
+    overflow-y: auto;
+    min-height: 0;
+    overscroll-behavior-y: contain;
+}
+</style>

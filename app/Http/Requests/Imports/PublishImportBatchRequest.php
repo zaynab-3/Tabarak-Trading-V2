@@ -28,7 +28,7 @@ class PublishImportBatchRequest extends FormRequest
             );
         }
 
-        $rules['items.*.unit_price'] = ['required', 'numeric', 'min:0.01', 'max:9999999999.99', 'decimal:0,2'];
+        $rules['items.*.unit_price'] = ['nullable', 'numeric', 'min:0.01', 'max:9999999999.99', 'decimal:0,2'];
         $rules['items.*.sku'][] = 'distinct:ignore_case';
 
         return $rules;

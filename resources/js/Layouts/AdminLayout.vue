@@ -12,14 +12,12 @@ const page = usePage<PageProps>();
 </script>
 
 <template>
-    <div class="admin-shell min-h-screen bg-[#F8F9FC] lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
-        <div class="fixed inset-y-0 left-0 z-50 hidden w-[236px] lg:block"><AdminSidebar /></div>
+    <div class="admin-shell min-h-screen bg-[#F5F4F0] lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
+        <div class="fixed inset-y-0 left-0 z-50 hidden w-[248px] lg:block"><AdminSidebar /></div>
 
         <div v-if="mobileMenu" class="fixed inset-0 z-50 flex lg:hidden">
             <AdminSidebar mobile />
-            <button class="flex flex-1 items-start justify-end bg-slate-950/45 p-5 text-white backdrop-blur-sm" aria-label="Close navigation" @click="mobileMenu = false">
-                <X class="size-6" />
-            </button>
+            <button class="flex flex-1 items-start justify-end bg-slate-950/45 p-5 text-white backdrop-blur-sm" aria-label="Close navigation" @click="mobileMenu = false"><X class="size-6" /></button>
         </div>
 
         <div class="min-w-0 lg:col-start-2">

@@ -6,7 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <meta name="description" content="Tabarak Trading wholesale food catalogue for retailers and food-service partners.">
-        <meta name="theme-color" content="#4058E1">
+        <meta name="theme-color" content="#24324A">
         <meta name="application-name" content="Tabarak Trading">
         <meta name="apple-mobile-web-app-title" content="Tabarak Trading">
         <meta name="apple-mobile-web-app-capable" content="yes">
@@ -21,7 +21,7 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=dm-sans:500,600,700&family=manrope:400,500,600,700,800&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @routes

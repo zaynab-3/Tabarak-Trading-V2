@@ -7,8 +7,9 @@ use App\Actions\Orders\DeleteOrder;
 use App\Enums\OrderDeletionMode;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Orders\OrderIndexRequest;
 use App\Http\Requests\Orders\DeleteOrderRequest;
+use App\Http\Requests\Orders\OrderIndexRequest;
+use App\Http\Requests\Orders\UpdateOrderInvoiceDetailsRequest;
 use App\Models\Order;
 use App\Services\Orders\OrderPresenter;
 use Illuminate\Http\RedirectResponse;
@@ -29,9 +30,9 @@ class OrderController extends Controller
             ->when($filters['search'] ?? null, function ($query, $search): void {
                 $query->where(function ($nested) use ($search): void {
                     $nested->where('order_number', 'like', '%'.$search.'%')
+                        ->orWhere('purchase_order_number', 'like', '%'.$search.'%')
                         ->orWhere('customer_name', 'like', '%'.$search.'%')
-                        ->orWhere('customer_phone', 'like', '%'.$search.'%')
-                        ->orWhere('customer_address', 'like', '%'.$search.'%');
+                        ->orWhere('customer_phone', 'like', '%'.$search.'%');
                 });
             })
             ->latest('submitted_at')
@@ -52,6 +53,20 @@ class OrderController extends Controller
         $order->load('items');
 
         return Inertia::render('Admin/Orders/Show', ['order' => $presenter->detail($order)]);
+    }
+
+    public function updateInvoiceDetails(UpdateOrderInvoiceDetailsRequest $request, Order $order): RedirectResponse
+    {
+        Gate::authorize('update', $order);
+        $data = $request->validated();
+
+        if (($data['payment_method'] ?? null) !== 'check') {
+            $data['check_number'] = null;
+        }
+
+        $order->update($data);
+
+        return back()->with('success', 'Invoice details saved.');
     }
 
     public function complete(Order $order, CompleteOrder $action): RedirectResponse

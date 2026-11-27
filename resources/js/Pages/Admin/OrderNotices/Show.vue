@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, MapPin, RotateCcw, ShieldCheck } from '@lucide/vue';
+import { ArrowLeft, RotateCcw, ShieldCheck } from '@lucide/vue';
 import OrderDeletionItems from '@/Components/Admin/OrderDeletionItems.vue';
 import OrderTotals from '@/Components/Orders/OrderTotals.vue';
 import PageHeader from '@/Components/Admin/PageHeader.vue';
@@ -31,11 +31,12 @@ defineProps<{ notice: OrderDeletionNotice }>();
                     <p class="eyebrow">Customer</p>
                     <h2 class="mt-1 text-xl font-bold text-tabarak-ink">{{ notice.customer_name }}</h2>
                     <p class="mt-2 text-sm font-bold text-tabarak-blue">{{ notice.customer_phone }}</p>
-                    <p v-if="notice.customer_address" class="mt-2 flex items-start gap-1.5 text-xs text-slate-600">
-                        <MapPin class="size-3.5 shrink-0 mt-0.5 text-slate-400" />
-                        <span>{{ notice.customer_address }}</span>
-                    </p>
+                    <p v-if="notice.billing_address" class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600">{{ notice.billing_address }}</p>
                     <dl class="mt-5 space-y-3 border-t border-tabarak-line pt-4 text-sm">
+                        <div class="flex justify-between gap-3"><dt class="text-slate-500">Invoice #</dt><dd class="text-right font-semibold">{{ notice.order_number }}</dd></div>
+                        <div v-if="notice.purchase_order_number" class="flex justify-between gap-3"><dt class="text-slate-500">PO #</dt><dd class="text-right font-semibold">{{ notice.purchase_order_number }}</dd></div>
+                        <div v-if="notice.delivery_date" class="flex justify-between gap-3"><dt class="text-slate-500">Delivery</dt><dd class="text-right font-semibold">{{ notice.delivery_date }}</dd></div>
+                        <div v-if="notice.payment_method" class="flex justify-between gap-3"><dt class="text-slate-500">Payment</dt><dd class="text-right font-semibold capitalize">{{ notice.payment_method }}<span v-if="notice.payment_method === 'check' && notice.check_number"> · #{{ notice.check_number }}</span></dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-slate-500">Original status</dt><dd class="font-semibold capitalize">{{ notice.order_status }}</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-slate-500">Submitted</dt><dd class="text-right font-semibold">{{ formatDateTime(notice.submitted_at) }}</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-slate-500">Deleted by</dt><dd class="text-right font-semibold">{{ notice.deleted_by || 'Former administrator' }}</dd></div>

@@ -18,4 +18,8 @@ export type PageProps<
         error?: string;
     };
     cart: CartSummary;
+    company_policy: {
+        summary: string;
+        lines: string[];
+    };
 };

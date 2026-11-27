@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\Cart\CartService;
+use App\Support\CompanyPolicy;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -40,6 +41,10 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             'cart' => fn () => app(CartService::class)->summary(),
+            'company_policy' => fn () => [
+                'summary' => CompanyPolicy::storefrontSummary(),
+                'lines' => CompanyPolicy::lines(),
+            ],
         ];
     }
 }

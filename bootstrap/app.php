@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAdminAccessGate;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -14,7 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->redirectGuestsTo(fn () => route('admin.login'));
+        $middleware->redirectGuestsTo(function () {
+            if (!session('admin_gate_unlocked')) {
+                abort(404);
+            }
+            return route('admin.login');
+        });
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
         $middleware->web(append: [
             HandleInertiaRequests::class,
@@ -22,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'admin.gate' => EnsureAdminAccessGate::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

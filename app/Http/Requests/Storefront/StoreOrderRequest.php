@@ -13,6 +13,9 @@ class StoreOrderRequest extends FormRequest
 
         $this->merge([
             'customer_phone' => '+1'.$nationalNumber,
+            'purchase_order_number' => $this->cleanNullableString($this->input('purchase_order_number')),
+            'billing_address' => $this->cleanNullableString($this->input('billing_address')),
+            'shipping_address' => $this->cleanNullableString($this->input('shipping_address')),
         ]);
     }
 
@@ -26,7 +29,9 @@ class StoreOrderRequest extends FormRequest
         return [
             'customer_name' => ['required', 'string', 'min:2', 'max:180'],
             'customer_phone' => ['required', 'string', 'regex:/^\+1[2-9]\d{2}[2-9]\d{6}$/'],
-            'customer_address' => ['required', 'string', 'min:3', 'max:255'],
+            'purchase_order_number' => ['nullable', 'string', 'max:80'],
+            'billing_address' => ['required', 'string', 'min:5', 'max:600'],
+            'shipping_address' => ['nullable', 'string', 'max:600'],
         ];
     }
 
@@ -35,7 +40,18 @@ class StoreOrderRequest extends FormRequest
         return [
             'customer_name.required' => 'Enter the shop or owner name.',
             'customer_phone.regex' => 'Enter a valid U.S. number such as +1 (202) 222 2222.',
-            'customer_address.required' => 'Enter the delivery or shop address.',
+            'billing_address.required' => 'Enter the billing address.',
         ];
+    }
+
+    private function cleanNullableString(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return $value === '' ? null : $value;
     }
 }

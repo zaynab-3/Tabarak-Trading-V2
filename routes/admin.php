@@ -20,8 +20,13 @@ use App\Http\Controllers\Admin\ProductImageController;
 use App\Http\Controllers\Admin\SettingsController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::middleware('guest')->group(function () {
+$adminPrefix = trim((string) config('admin.path', 'tabarak-manage'), '/');
+if ($adminPrefix === '') {
+    $adminPrefix = 'tabarak-manage';
+}
+
+Route::prefix($adminPrefix)->name('admin.')->group(function () {
+    Route::middleware(['guest', 'admin.gate'])->group(function () {
         Route::get('/login', [AdminSessionController::class, 'create'])->name('login');
         Route::post('/login', [AdminSessionController::class, 'store'])->name('login.store');
     });
@@ -34,6 +39,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::resource('order-notices', OrderDeletionNoticeController::class)->only(['index', 'show']);
         Route::get('/order-notices/{orderNotice}/items/{item}/image', OrderDeletionNoticeItemImageController::class)->name('order-notices.items.image');
+        Route::patch('/orders/{order}/invoice-details', [OrderController::class, 'updateInvoiceDetails'])->name('orders.invoice-details.update');
         Route::patch('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
         Route::patch('/products/{product}/archive', [ProductController::class, 'archive'])->name('products.archive');
         Route::patch('/products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');

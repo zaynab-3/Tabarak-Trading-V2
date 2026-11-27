@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderDeletionMode;
+use App\Enums\OrderPaymentMethod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,9 @@ class OrderDeletionNotice extends Model
     use HasFactory;
 
     protected $fillable = [
-        'order_number', 'public_token', 'customer_name', 'customer_phone', 'customer_address', 'order_status',
+        'order_number', 'public_token', 'customer_name', 'customer_phone',
+        'purchase_order_number', 'billing_address', 'shipping_address',
+        'delivery_date', 'payment_method', 'check_number', 'order_status',
         'currency', 'subtotal', 'total', 'deletion_mode', 'restored_quantity', 'items',
         'submitted_at', 'completed_at', 'deleted_by', 'recorded_at',
     ];
@@ -21,6 +24,8 @@ class OrderDeletionNotice extends Model
     {
         return [
             'deletion_mode' => OrderDeletionMode::class,
+            'payment_method' => OrderPaymentMethod::class,
+            'delivery_date' => 'date',
             'subtotal' => 'decimal:2',
             'total' => 'decimal:2',
             'restored_quantity' => 'integer',

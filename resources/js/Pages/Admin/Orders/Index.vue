@@ -28,12 +28,8 @@ const complete = (order: Order) => router.patch(route('admin.orders.complete', o
                 <thead><tr><th class="px-4 py-3">Order</th><th class="px-4 py-3">Shop / owner</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Total</th><th class="hidden px-4 py-3 lg:table-cell">Submitted</th><th class="px-4 py-3 text-right">Actions</th></tr></thead>
                 <tbody class="divide-y divide-tabarak-line">
                     <tr v-for="order in orders.data" :key="order.id">
-                        <td class="px-4 py-3"><Link :href="route('admin.orders.show', order.public_token)" class="font-bold text-tabarak-blue hover:text-tabarak-orange">{{ order.order_number }}</Link><p class="mt-1 text-xs text-slate-400">{{ order.items_count }} line item{{ order.items_count === 1 ? '' : 's' }}</p></td>
-                        <td class="px-4 py-3">
-                            <p class="font-semibold text-tabarak-ink">{{ order.customer_name }}</p>
-                            <p class="mt-1 text-xs text-slate-500">{{ order.customer_phone }}</p>
-                            <p v-if="order.customer_address" class="mt-0.5 text-xs text-slate-400 truncate max-w-xs" :title="order.customer_address">{{ order.customer_address }}</p>
-                        </td>
+                        <td class="px-4 py-3"><Link :href="route('admin.orders.show', order.public_token)" class="font-bold text-tabarak-blue hover:text-tabarak-orange">{{ order.order_number }}</Link><p class="mt-1 text-xs text-slate-400">{{ order.items_count }} line item{{ order.items_count === 1 ? '' : 's' }}<span v-if="order.purchase_order_number"> · PO {{ order.purchase_order_number }}</span></p></td>
+                        <td class="px-4 py-3"><p class="font-semibold text-tabarak-ink">{{ order.customer_name }}</p><p class="mt-1 text-xs text-slate-500">{{ order.customer_phone }}</p></td>
                         <td class="px-4 py-3"><StatusBadge :status="order.status" /></td>
                         <td class="px-4 py-3 font-bold text-tabarak-ink">{{ formatMoney(order.total) }}</td>
                         <td class="hidden px-4 py-3 text-slate-500 lg:table-cell">{{ formatDateTime(order.submitted_at) }}</td>

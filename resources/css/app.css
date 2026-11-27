@@ -4,11 +4,12 @@
 
 @layer base {
     :root { color-scheme: light; }
-    html { scroll-behavior: smooth; }
-    body { @apply bg-[#F8F9FC] font-sans text-slate-800 antialiased; }
-    ::selection { @apply bg-tabarak-line text-tabarak-ink; }
+    html { scroll-behavior: smooth; scrollbar-width: none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
+    body { @apply bg-[#F7F6F2] font-sans text-slate-800 antialiased; }
+    ::selection { @apply bg-[#FBE9DE] text-tabarak-ink; }
     button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
-    :focus-visible { @apply outline-none ring-2 ring-saffron-500 ring-offset-2; }
+    :focus-visible { @apply outline-none ring-2 ring-tabarak-orange ring-offset-2 ring-offset-white; }
     input[type="search"]::-webkit-search-decoration,
     input[type="search"]::-webkit-search-cancel-button,
     input[type="search"]::-webkit-search-results-button,
@@ -16,46 +17,63 @@
         -webkit-appearance: none;
         display: none;
     }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
 }
 
 @layer components {
-    .page-shell { @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8; }
-    .surface { @apply rounded-xl border border-[#E7EAF3] bg-white shadow-[0_1px_2px_rgba(21,24,42,0.03)]; }
-    .btn-primary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-tabarak-orange px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#E94E00] disabled:cursor-not-allowed disabled:opacity-50; }
-    .btn-secondary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-tabarak-line bg-white px-5 py-2.5 text-sm font-semibold text-tabarak-blue transition hover:bg-tabarak-mist disabled:cursor-not-allowed disabled:opacity-50; }
-    .btn-danger { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50; }
-    .field-label { @apply mb-1.5 block text-sm font-semibold text-slate-700; }
-    .field-input { @apply block min-h-12 w-full rounded-lg border-[#D9DEED] bg-white text-sm text-slate-900 shadow-none placeholder:text-slate-400 focus:border-tabarak-blue focus:ring-tabarak-blue; }
-    .eyebrow { @apply text-sm font-semibold text-tabarak-blue; }
-    .storefront-shell { @apply min-h-screen bg-[#F8F9FC] text-tabarak-ink; }
-    .storefront-shell :focus-visible { @apply ring-tabarak-blue; }
+    .page-shell { @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-10; }
+    .surface { @apply rounded-2xl bg-white shadow-[0_10px_32px_rgba(25,27,32,0.045)]; }
+
+    .btn-primary { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-tabarak-ink px-5 py-2.5 text-sm font-bold text-white transition hover:bg-tabarak-orange active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50; }
+    .btn-secondary { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#EEECE7] px-5 py-2.5 text-sm font-bold text-tabarak-ink transition hover:bg-[#E4E1DA] disabled:cursor-not-allowed disabled:opacity-50; }
+    .btn-danger { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100; }
+
+    .field-label { @apply mb-1.5 block text-[13px] font-bold text-tabarak-ink; }
+    .field-input { @apply block min-h-12 w-full rounded-xl border-[#DCD9D1] bg-white text-sm text-tabarak-ink shadow-none placeholder:text-slate-400 focus:border-tabarak-ink focus:ring-1 focus:ring-tabarak-ink; }
+    .eyebrow { @apply text-xs font-extrabold uppercase tracking-[0.16em] text-tabarak-orange; }
+
+    .storefront-shell { @apply min-h-screen bg-[#F7F6F2] text-tabarak-ink; scrollbar-width: none; }
+    .storefront-shell * { scrollbar-width: none; }
+    .storefront-shell::-webkit-scrollbar, .storefront-shell *::-webkit-scrollbar { display: none; width: 0; height: 0; }
+    .storefront-shell :focus-visible { @apply ring-tabarak-orange; }
+
     .admin-shell { @apply text-tabarak-ink; }
-    .admin-shell :focus-visible { @apply ring-tabarak-blue; }
-    .admin-nav-link { @apply relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-600 transition hover:bg-tabarak-mist hover:text-tabarak-blue; }
-    .admin-nav-link-active { @apply bg-tabarak-blue font-semibold text-white hover:bg-tabarak-blue hover:text-white; }
+    .admin-shell :focus-visible { @apply ring-tabarak-orange; }
+    .admin-nav-link { @apply relative flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-white/65 transition hover:bg-white/10 hover:text-white; }
+    .admin-nav-link-active { @apply bg-white/10 text-white hover:bg-white/10 hover:text-white; }
     .admin-nav-link-active::before { content: ''; @apply absolute -left-3 h-6 w-1 rounded-r-full bg-tabarak-orange; }
-    .admin-icon-button { @apply grid size-11 shrink-0 place-items-center rounded-lg border border-[#E1E5F0] bg-white text-slate-600 transition hover:bg-tabarak-mist hover:text-tabarak-blue; }
-    .admin-secondary-action { @apply inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#E1E5F0] bg-white px-3 text-sm font-semibold text-tabarak-blue transition hover:bg-tabarak-mist; }
-    .admin-table-action { @apply grid size-10 shrink-0 place-items-center rounded-lg border border-[#E1E5F0] bg-white text-slate-500 transition hover:bg-tabarak-mist hover:text-tabarak-blue; }
+    .admin-icon-button { @apply grid size-11 shrink-0 place-items-center rounded-full bg-[#F1F0EC] text-slate-600 transition hover:bg-[#E8E5DE] hover:text-tabarak-ink; }
+    .admin-secondary-action { @apply inline-flex min-h-11 items-center gap-2 rounded-full bg-[#F1F0EC] px-4 text-sm font-bold text-tabarak-ink transition hover:bg-[#E8E5DE]; }
+    .admin-table-action { @apply grid size-10 shrink-0 place-items-center rounded-full bg-[#F4F2ED] text-slate-500 transition hover:bg-[#E8E5DE] hover:text-tabarak-ink; }
     .admin-section-title { @apply text-sm font-bold text-tabarak-ink; }
 
-    .admin-shell .text-forest-900, .admin-shell .text-forest-800 { color: #15182A; }
-    .admin-shell .text-forest-700, .admin-shell .text-forest-600 { color: #4058E1; }
+    .admin-shell .text-forest-900, .admin-shell .text-forest-800 { color: #191B20; }
+    .admin-shell .text-forest-700, .admin-shell .text-forest-600 { color: #24324A; }
     .admin-shell .text-forest-100 { color: rgba(255, 255, 255, 0.78); }
-    .admin-shell .bg-forest-950, .admin-shell .bg-forest-900 { background-color: #4058E1; }
-    .admin-shell .bg-forest-50 { background-color: #F5F7FF; }
-    .admin-shell .bg-saffron-100 { background-color: #FFF0E8; }
-    .admin-shell .bg-saffron-500 { background-color: #FF5602; }
-    .admin-shell .text-saffron-600, .admin-shell .text-saffron-500, .admin-shell .text-saffron-400 { color: #FF5602; }
-    .admin-shell .border-saffron-500 { border-color: #FF5602; }
-    .admin-shell .border-oat-300, .admin-shell .border-oat-200 { border-color: #DDE2FF; }
-    .admin-shell .bg-oat-50, .admin-shell .bg-oat-100 { background-color: #F5F7FF; }
-    .admin-shell .divide-oat-200 > :not([hidden]) ~ :not([hidden]) { border-color: #DDE2FF; }
-    .admin-shell table thead { @apply border-b border-tabarak-line bg-tabarak-mist; }
+    .admin-shell .bg-forest-950, .admin-shell .bg-forest-900 { background-color: #24324A; }
+    .admin-shell .bg-forest-50 { background-color: #F4F2ED; }
+    .admin-shell .bg-saffron-100 { background-color: #FBE9DE; }
+    .admin-shell .bg-saffron-500 { background-color: #F05A28; }
+    .admin-shell .text-saffron-600, .admin-shell .text-saffron-500, .admin-shell .text-saffron-400 { color: #F05A28; }
+    .admin-shell .border-saffron-500 { border-color: #F05A28; }
+    .admin-shell .border-oat-300, .admin-shell .border-oat-200 { border-color: #E8E5DE; }
+    .admin-shell .bg-oat-50, .admin-shell .bg-oat-100 { background-color: #F7F6F2; }
+    .admin-shell .divide-oat-200 > :not([hidden]) ~ :not([hidden]) { border-color: #E8E5DE; }
+    .admin-shell table thead { @apply bg-[#F4F2ED]; }
     .admin-shell table tbody tr { @apply transition; }
-    .admin-shell table tbody tr:hover { background-color: rgba(245, 247, 255, 0.7); }
-    .admin-shell .hover\:bg-oat-50:hover { background-color: #F5F7FF; }
-    .admin-shell .hover\:border-forest-600:hover { border-color: #4058E1; }
+    .admin-shell table tbody tr:hover { background-color: rgba(244, 242, 237, 0.72); }
+    .admin-shell .hover\:bg-oat-50:hover { background-color: #F4F2ED; }
+    .admin-shell .hover\:border-forest-600:hover { border-color: #24324A; }
+
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
 }

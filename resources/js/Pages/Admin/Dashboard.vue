@@ -117,7 +117,7 @@ defineProps<{
                         <td class="px-4 py-3">
                             <p class="font-semibold text-tabarak-ink">{{ order.customer_name }}</p>
                             <p class="mt-1 text-xs text-slate-500">{{ order.customer_phone }}</p>
-                            <p v-if="order.customer_address" class="mt-0.5 text-xs text-slate-400 truncate max-w-xs" :title="order.customer_address">{{ order.customer_address }}</p>
+                            <p v-if="order.shipping_address || order.billing_address" class="mt-0.5 text-xs text-slate-400 truncate max-w-xs" :title="order.shipping_address || order.billing_address || ''">{{ order.shipping_address || order.billing_address }}</p>
                         </td>
                         <td class="px-4 py-3"><StatusBadge :status="order.status" /></td>
                         <td class="px-4 py-3 font-semibold text-tabarak-ink">{{ formatMoney(order.total) }}</td>

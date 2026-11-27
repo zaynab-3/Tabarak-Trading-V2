@@ -1,38 +1,44 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ArrowRight, Image as ImageIcon } from '@lucide/vue';
+import { Image as ImageIcon } from '@lucide/vue';
 import type { Product } from '@/types/catalogue';
-import { productPackLabel } from '@/Utils/format';
-import { formatMoney } from '@/Utils/format';
+import { formatMoney, productPackLabel } from '@/Utils/format';
 import AddToCartButton from '@/Components/Storefront/AddToCartButton.vue';
 
 defineProps<{ product: Product }>();
 </script>
 
 <template>
-    <article class="group flex min-h-[430px] flex-col overflow-hidden rounded-xl border border-[#E7EAF3] bg-white transition hover:border-tabarak-line hover:shadow-[0_10px_30px_rgba(21,24,42,0.07)]">
-        <Link :href="route('products.show', product.slug)" class="relative flex min-h-56 items-center justify-center overflow-hidden bg-tabarak-mist p-6">
-            <img v-if="product.primary_image" :src="product.primary_image.url" :alt="product.primary_image.alt_text || product.name" class="h-52 w-full object-contain transition duration-300 group-hover:scale-[1.03]" loading="lazy" />
-            <div v-else class="flex h-full flex-col items-center justify-center gap-3 text-tabarak-blue">
-                <ImageIcon class="size-8" />
-                <span class="text-xs font-bold text-slate-500">Image coming soon</span>
+    <article class="group min-w-0">
+        <Link :href="route('products.show', product.slug)" class="relative grid aspect-square place-items-center overflow-hidden rounded-[22px] bg-[#F0EFEA] sm:rounded-[26px]">
+            <img
+                v-if="product.primary_image"
+                :src="product.primary_image.url"
+                :alt="product.primary_image.alt_text || product.name"
+                class="max-h-[88%] max-w-[88%] object-contain transition duration-300 ease-out group-hover:scale-[1.035]"
+                loading="lazy"
+            />
+            <div v-else class="flex flex-col items-center justify-center gap-2 text-slate-400">
+                <ImageIcon class="size-7" />
+                <span class="text-[10px] font-bold">Image coming soon</span>
             </div>
-            <span v-if="product.is_featured" class="absolute left-3 top-3 rounded bg-tabarak-orange px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Featured</span>
+            <span v-if="product.is_featured" class="absolute left-2.5 top-2.5 rounded-full bg-white/95 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.12em] text-tabarak-ink sm:left-3 sm:top-3">Featured</span>
         </Link>
-        <div class="flex min-w-0 flex-1 flex-col p-5">
-            <div class="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
-                <span>{{ product.brand?.name || 'Tabarak selection' }}</span><span aria-hidden="true">·</span><span>{{ product.category?.name || 'Catalogue' }}</span>
-            </div>
-            <h3 class="font-display text-lg font-semibold leading-snug text-tabarak-ink lg:text-xl">
-                <Link :href="route('products.show', product.slug)">{{ product.name }}</Link>
+
+        <div class="px-0.5 pt-3">
+            <p class="truncate text-[9px] font-extrabold uppercase tracking-[0.13em] text-tabarak-orange sm:text-[10px]">{{ product.brand?.name || 'Tabarak selection' }}</p>
+            <h3 class="mt-1 line-clamp-2 min-h-[2.5rem] text-[13px] font-bold leading-[1.35] text-tabarak-ink sm:text-[15px]">
+                <Link :href="route('products.show', product.slug)" class="transition hover:text-tabarak-orange">{{ product.name }}</Link>
             </h3>
-            <p class="mt-3 text-sm text-slate-500">{{ productPackLabel(product) }}</p>
-            <p v-if="product.unit_price" class="mt-2 text-lg font-bold text-tabarak-blue">{{ formatMoney(product.unit_price) }}</p>
-            <div class="mt-auto flex flex-wrap items-center gap-2 border-t border-tabarak-line pt-4">
-                <Link :href="route('products.show', product.slug)" class="flex min-h-11 flex-1 items-center justify-between text-sm font-bold text-tabarak-blue">
-                    <span>View product</span><ArrowRight class="size-4 transition group-hover:translate-x-0.5" />
-                </Link>
-                <AddToCartButton v-if="product.unit_price" :product="product" compact />
+            <p class="mt-1 truncate text-[10px] font-medium text-slate-400 sm:text-xs">{{ productPackLabel(product) }}</p>
+
+            <div class="mt-2.5 flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <p v-if="product.unit_price" class="text-base font-extrabold tracking-[-0.02em] text-tabarak-ink sm:text-lg">{{ formatMoney(product.unit_price) }}</p>
+                    <span v-else class="text-xs font-bold text-slate-400">Ask for price</span>
+                </div>
+                <AddToCartButton v-if="product.unit_price && product.is_available" :product="product" compact />
+                <span v-else-if="product.unit_price" class="text-[10px] font-bold text-slate-400">Out of stock</span>
             </div>
         </div>
     </article>

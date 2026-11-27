@@ -2,117 +2,259 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>{{ $order->order_number }}</title>
+    <title>Invoice {{ $order->order_number }}</title>
     <style>
-        @page { margin: 34px; }
+        @page { size: letter portrait; margin: 24px 28px 34px; }
         * { box-sizing: border-box; }
-        body { margin: 0; color: #15182A; font-family: DejaVu Sans, sans-serif; font-size: 11px; line-height: 1.45; }
-        .header { width: 100%; border-bottom: 3px solid #4058E1; padding-bottom: 18px; margin-bottom: 22px; }
-        .header td { vertical-align: middle; }
-        .logo { width: 54px; height: 54px; object-fit: contain; }
-        .brand { padding-left: 12px; }
-        .brand strong { display: block; color: #4058E1; font-family: Georgia, serif; font-size: 21px; }
-        .brand span { color: #667085; font-size: 9px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
-        .invoice-title { color: #4058E1; font-family: Georgia, serif; font-size: 25px; font-weight: bold; text-align: right; }
-        .invoice-number { color: #667085; text-align: right; }
-        .meta { width: 100%; margin-bottom: 24px; }
-        .meta td { width: 50%; vertical-align: top; }
-        .meta-card { border: 1px solid #DDE2FF; border-radius: 8px; padding: 14px; }
-        .meta-label { color: #FF5602; font-size: 8px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; }
-        .meta-value { display: block; margin-top: 5px; font-size: 13px; font-weight: bold; }
-        .meta-line { margin-top: 5px; color: #667085; }
-        .status { display: inline-block; margin-top: 7px; border-radius: 20px; background: #F5F7FF; color: #4058E1; padding: 4px 9px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-        table.items { width: 100%; border-collapse: collapse; }
-        .items th { border-bottom: 2px solid #4058E1; padding: 9px 7px; color: #667085; font-size: 8px; letter-spacing: 1px; text-align: left; text-transform: uppercase; }
-        .items td { border-bottom: 1px solid #DDE2FF; padding: 11px 7px; vertical-align: middle; }
-        .items .money, .items th.money { text-align: right; white-space: nowrap; }
-        .product-cell { width: 48%; }
-        .product-image { display: inline-block; width: 60px; height: 60px; margin-right: 10px; vertical-align: middle; object-fit: contain; }
-        .image-placeholder { display: inline-block; width: 60px; height: 60px; margin-right: 10px; background: #F5F7FF; vertical-align: middle; }
-        .product-copy { display: inline-block; width: 185px; vertical-align: middle; }
-        .product-name { display: block; font-weight: bold; }
-        .product-meta { display: block; margin-top: 4px; color: #667085; font-size: 9px; }
-        .totals { width: 265px; margin-left: auto; margin-top: 18px; border-collapse: collapse; }
-        .totals td { padding: 7px 4px; }
-        .totals .amount { text-align: right; }
-        .totals .grand td { border-top: 2px solid #4058E1; color: #4058E1; font-size: 15px; font-weight: bold; padding-top: 10px; }
-        .note { margin-top: 28px; border-left: 4px solid #FF5602; background: #FFF4EE; padding: 12px 14px; color: #4B5563; }
-        .footer { position: fixed; right: 0; bottom: -18px; left: 0; color: #98A2B3; font-size: 8px; text-align: center; }
+        body {
+            margin: 0;
+            color: #111;
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 9.5px;
+            line-height: 1.35;
+        }
+        table { border-collapse: collapse; }
+        .header { width: 100%; margin-bottom: 12px; }
+        .header td { vertical-align: top; }
+        .brand-block { width: 61%; }
+        .logo-wrap { display: inline-block; width: 78px; vertical-align: top; }
+        .logo { width: 70px; height: 70px; object-fit: contain; }
+        .company-copy { display: inline-block; width: 320px; vertical-align: top; padding-top: 1px; }
+        .company-name { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+        .company-line { margin: 1px 0; }
+        .invoice-panel { width: 39%; border: 1.5px solid #111; }
+        .invoice-panel td { padding: 5px 7px; border-bottom: 1px solid #111; }
+        .invoice-panel tr:last-child td { border-bottom: 0; }
+        .invoice-panel .invoice-heading { font-size: 15px; font-weight: 700; text-align: center; }
+        .invoice-panel .label { font-weight: 700; }
+        .invoice-panel .value { text-align: right; }
+
+        .party-table { width: 100%; margin-bottom: 9px; table-layout: fixed; }
+        .party-table td { width: 50%; vertical-align: top; padding-right: 5px; }
+        .party-table td:last-child { padding-right: 0; padding-left: 5px; }
+        .party-box { border: 1px solid #111; min-height: 82px; }
+        .party-title { border-bottom: 1px solid #111; padding: 3px 6px; font-weight: 700; background: #f4f4f4; }
+        .party-content { padding: 6px; min-height: 61px; }
+        .party-name { font-weight: 700; margin-bottom: 2px; }
+        .party-address { white-space: pre-line; min-height: 26px; }
+        .party-phone { margin-top: 3px; }
+
+        .meta-table { width: 100%; margin-bottom: 10px; table-layout: fixed; }
+        .meta-table th, .meta-table td { border: 1px solid #111; padding: 4px 6px; }
+        .meta-table th { background: #f4f4f4; font-size: 8px; text-transform: uppercase; letter-spacing: .35px; }
+        .meta-table td { min-height: 22px; text-align: center; }
+        .payment-cell { white-space: nowrap; }
+        .check-box {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border: 1px solid #111;
+            margin: 0 3px 0 6px;
+            vertical-align: -1px;
+            text-align: center;
+            line-height: 8px;
+            font-size: 8px;
+            font-weight: 700;
+        }
+        .check-box.first { margin-left: 0; }
+
+        .items { width: 100%; table-layout: fixed; }
+        .items thead { display: table-header-group; }
+        .items th, .items td { border: 1px solid #111; padding: 4px 5px; vertical-align: top; }
+        .items th { background: #ededed; font-size: 8px; font-weight: 700; text-transform: uppercase; }
+        .items td { font-size: 8.8px; }
+        .items .num { width: 5%; text-align: center; }
+        .items .code { width: 17%; }
+        .items .description { width: 39%; }
+        .items .qty { width: 9%; text-align: center; }
+        .items .price { width: 14%; text-align: right; white-space: nowrap; }
+        .items .amount { width: 16%; text-align: right; white-space: nowrap; }
+        .item-name { font-weight: 700; }
+        .item-pack { color: #444; margin-top: 2px; }
+
+        .summary { width: 100%; margin-top: 8px; }
+        .summary td { vertical-align: top; }
+        .summary-left { width: 61%; padding-right: 15px; }
+        .summary-right { width: 39%; }
+        .totals { width: 100%; }
+        .totals td { border: 1px solid #111; padding: 5px 7px; }
+        .totals .label { font-weight: 700; background: #f4f4f4; }
+        .totals .amount { text-align: right; font-weight: 700; }
+        .totals .grand td { font-size: 11px; }
+
+        .signatures { margin-top: 14px; page-break-inside: avoid; }
+        .signature-row { width: 100%; margin-top: 9px; }
+        .signature-row td { width: 50%; padding-right: 16px; vertical-align: bottom; }
+        .signature-row td:last-child { padding-right: 0; padding-left: 16px; }
+        .line { display: inline-block; width: 165px; height: 13px; border-bottom: 1px solid #111; vertical-align: bottom; }
+        .acknowledgement { margin-top: 8px; font-size: 8px; }
+
+        .policy { margin-top: 14px; border-top: 1.5px solid #111; padding-top: 7px; page-break-inside: avoid; }
+        .policy-title { margin-bottom: 4px; font-weight: 700; font-size: 10px; }
+        .policy-line { margin: 2px 0; }
+        .policy-line:before { content: "• "; }
+        .legal-note { margin-top: 5px; font-size: 7px; color: #444; }
+
+        .footer {
+            position: fixed;
+            bottom: -22px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 7px;
+            color: #555;
+        }
     </style>
 </head>
 <body>
+    @php
+        $shipAddress = filled($order->shipping_address) ? $order->shipping_address : $order->billing_address;
+        $policyLines = collect(preg_split('/\r\n|\r|\n/', (string) $company['policy']))
+            ->map(fn ($line) => trim($line))
+            ->filter();
+        $paymentMethod = $order->payment_method?->value;
+    @endphp
+
     <table class="header">
         <tr>
-            <td width="58%">
-                @if ($logo)<img src="{{ $logo }}" alt="" class="logo">@endif
-                <span class="brand"><strong>Tabarak Trading</strong><span>Wholesale catalogue</span></span>
+            <td class="brand-block">
+                <span class="logo-wrap">
+                    @if ($logo)
+                        <img src="{{ $logo }}" alt="" class="logo">
+                    @endif
+                </span>
+                <span class="company-copy">
+                    <div class="company-name">{{ $company['name'] }}</div>
+                    <div class="company-line">{{ $company['address_line_1'] }}</div>
+                    <div class="company-line">{{ $company['address_line_2'] }}</div>
+                    <div class="company-line">Phone: {{ $company['phone'] }}</div>
+                    <div class="company-line">Email: {{ $company['email'] }}</div>
+                </span>
             </td>
             <td>
-                <div class="invoice-title">Order invoice</div>
-                <div class="invoice-number">{{ $order->order_number }}</div>
+                <table class="invoice-panel">
+                    <tr><td colspan="2" class="invoice-heading">INVOICE</td></tr>
+                    <tr><td class="label">Invoice #</td><td class="value">{{ $order->order_number }}</td></tr>
+                    <tr><td class="label">Print Date</td><td class="value">{{ $printedAt->format('m/d/Y') }}</td></tr>
+                    <tr><td class="label">Order Date</td><td class="value">{{ $order->submitted_at?->timezone('America/Detroit')->format('m/d/Y') }}</td></tr>
+                </table>
             </td>
         </tr>
     </table>
 
-    <table class="meta" cellspacing="10">
+    <table class="party-table">
         <tr>
             <td>
-                <div class="meta-card">
-                    <span class="meta-label">Shop / owner</span>
-                    <span class="meta-value">{{ $order->customer_name }}</span>
-                    <div class="meta-line">{{ $order->customer_phone }}</div>
-                    @if ($order->customer_address)
-                        <div class="meta-line">{{ $order->customer_address }}</div>
-                    @endif
+                <div class="party-box">
+                    <div class="party-title">Bill To</div>
+                    <div class="party-content">
+                        <div class="party-name">{{ $order->customer_name }}</div>
+                        <div class="party-address">{{ $order->billing_address ?: ' ' }}</div>
+                        <div class="party-phone">Phone: {{ $order->customer_phone }}</div>
+                    </div>
                 </div>
             </td>
             <td>
-                <div class="meta-card">
-                    <span class="meta-label">Order details</span>
-                    <span class="meta-value">{{ $order->submitted_at->format('M j, Y · g:i A') }}</span>
-                    <span class="status">{{ $order->status->value }}</span>
+                <div class="party-box">
+                    <div class="party-title">Ship To</div>
+                    <div class="party-content">
+                        <div class="party-name">{{ $order->customer_name }}</div>
+                        <div class="party-address">{{ $shipAddress ?: ' ' }}</div>
+                        <div class="party-phone">Phone: {{ $order->customer_phone }}</div>
+                    </div>
                 </div>
             </td>
         </tr>
+    </table>
+
+    <table class="meta-table">
+        <thead>
+            <tr>
+                <th>Purchase Order #</th>
+                <th>Delivery Date</th>
+                <th>Payment Method</th>
+                <th>Check #</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ $order->purchase_order_number ?: '—' }}</td>
+                <td>{{ $order->delivery_date?->format('m/d/Y') ?: '—' }}</td>
+                <td class="payment-cell">
+                    <span class="check-box first">{{ $paymentMethod === 'cash' ? 'X' : '' }}</span> Cash
+                    <span class="check-box">{{ $paymentMethod === 'check' ? 'X' : '' }}</span> Check
+                </td>
+                <td>{{ $order->check_number ?: '—' }}</td>
+            </tr>
+        </tbody>
     </table>
 
     <table class="items">
         <thead>
             <tr>
-                <th class="product-cell">Item</th>
-                <th>Quantity</th>
-                <th class="money">Unit price</th>
-                <th class="money">Line total</th>
+                <th class="num">#</th>
+                <th class="code">Item Code</th>
+                <th class="description">Description</th>
+                <th class="qty">Qty</th>
+                <th class="price">Unit Price</th>
+                <th class="amount">Amount</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($order->items as $item)
                 <tr>
-                    <td class="product-cell">
-                        @if ($itemImages->get($item->id))
-                            <img src="{{ $itemImages->get($item->id) }}" alt="" class="product-image">
-                        @else
-                            <span class="image-placeholder"></span>
+                    <td class="num">{{ $loop->iteration }}</td>
+                    <td class="code">{{ $item->product_sku ?: '—' }}</td>
+                    <td class="description">
+                        <div class="item-name">{{ $item->product_name }}</div>
+                        @if ($item->pack_label)
+                            <div class="item-pack">{{ $item->pack_label }}</div>
                         @endif
-                        <span class="product-copy">
-                            <span class="product-name">{{ $item->product_name }}</span>
-                            <span class="product-meta">{{ $item->product_sku ?: 'No SKU' }} · {{ $item->pack_label }}</span>
-                        </span>
                     </td>
-                    <td>{{ number_format($item->quantity) }}</td>
-                    <td class="money">${{ number_format((float) $item->unit_price, 2) }}</td>
-                    <td class="money">${{ number_format((float) $item->line_total, 2) }}</td>
+                    <td class="qty">{{ number_format($item->quantity) }}</td>
+                    <td class="price">${{ number_format((float) $item->unit_price, 2) }}</td>
+                    <td class="amount">${{ number_format((float) $item->line_total, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 
-    <table class="totals">
-        <tr><td>Subtotal</td><td class="amount">${{ number_format((float) $order->subtotal, 2) }} USD</td></tr>
-        <tr class="grand"><td>Total</td><td class="amount">${{ number_format((float) $order->total, 2) }} USD</td></tr>
+    <table class="summary">
+        <tr>
+            <td class="summary-left"></td>
+            <td class="summary-right">
+                <table class="totals">
+                    <tr><td class="label">Sub-total</td><td class="amount">${{ number_format((float) $order->subtotal, 2) }}</td></tr>
+                    <tr class="grand"><td class="label">Total</td><td class="amount">${{ number_format((float) $order->total, 2) }}</td></tr>
+                </table>
+            </td>
+        </tr>
     </table>
 
-    <div class="note">This invoice records the order submitted to Tabarak Trading. The team will contact the customer at the U.S. phone number shown above.</div>
-    <div class="footer">Tabarak Trading · {{ $order->order_number }} · Generated {{ now()->format('M j, Y') }}</div>
+    <div class="signatures">
+        <div class="acknowledgement">By signing below, the receiving party acknowledges receipt of the merchandise and the Company Policy printed on this invoice.</div>
+        <table class="signature-row">
+            <tr>
+                <td><strong>Received By:</strong> <span class="line"></span></td>
+                <td><strong>Signature:</strong> <span class="line"></span></td>
+            </tr>
+        </table>
+        <table class="signature-row">
+            <tr>
+                <td><strong>Delivered By:</strong> <span class="line"></span></td>
+                <td><strong>Signature:</strong> <span class="line"></span></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="policy">
+        <div class="policy-title">Note / Company Policy</div>
+        @foreach ($policyLines as $line)
+            <div class="policy-line">{{ $line }}</div>
+        @endforeach
+        <div class="legal-note">Policy language is printed for business records and is subject to applicable law.</div>
+    </div>
+
+    <div class="footer">{{ $company['name'] }} · Invoice {{ $order->order_number }} · Printed {{ $printedAt->format('m/d/Y') }}</div>
 </body>
 </html>

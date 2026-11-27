@@ -4,17 +4,17 @@ export interface CartItem {
     product: Product;
     quantity: number;
     unit_price: string;
+    line_total: string;
     original_unit_price?: string | null;
     is_custom_price?: boolean;
-    line_total: string;
 }
 
 export interface CartSummary {
     items: CartItem[];
     item_count: number;
     subtotal: string;
-    has_custom_prices?: boolean;
     currency: 'USD';
+    has_custom_prices?: boolean;
 }
 
 export interface OrderItem {
@@ -31,13 +31,20 @@ export interface OrderItem {
     line_total: string;
 }
 
+export type OrderPaymentMethod = 'cash' | 'check';
+
 export interface Order {
     id: number;
     public_token: string;
     order_number: string;
     customer_name: string;
     customer_phone: string;
-    customer_address?: string | null;
+    purchase_order_number: string | null;
+    billing_address: string | null;
+    shipping_address: string | null;
+    delivery_date: string | null;
+    payment_method: OrderPaymentMethod | null;
+    check_number: string | null;
     status: 'pending' | 'completed';
     currency: 'USD';
     subtotal: string;
@@ -71,7 +78,12 @@ export interface OrderDeletionNotice {
     order_number: string;
     customer_name: string;
     customer_phone: string;
-    customer_address?: string | null;
+    purchase_order_number: string | null;
+    billing_address: string | null;
+    shipping_address: string | null;
+    delivery_date: string | null;
+    payment_method: OrderPaymentMethod | null;
+    check_number: string | null;
     order_status: 'pending' | 'completed';
     currency: 'USD';
     subtotal: string;

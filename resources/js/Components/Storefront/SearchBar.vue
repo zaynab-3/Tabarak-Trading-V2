@@ -68,17 +68,13 @@ onBeforeUnmount(() => {
     <form class="relative w-full" role="search" @submit.prevent="submit">
         <label class="sr-only" :for="inputId">Search the catalogue</label>
 
-        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tabarak-blue md:left-4">
-            <Search :class="compact ? 'size-4' : 'size-4 md:size-5'" aria-hidden="true" />
-        </span>
-
         <input
             :id="inputId"
             v-model="query"
             type="search"
             :class="compact
-                ? 'h-9 w-full rounded-lg border border-[#E7EAF3] bg-[#F8F9FC] pl-9 pr-22 text-xs text-tabarak-ink placeholder:text-slate-400 focus:border-tabarak-blue focus:bg-white focus:ring-1 focus:ring-tabarak-blue [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden'
-                : 'h-9.5 w-full rounded-lg border border-[#E7EAF3] bg-[#F8F9FC] pl-9 pr-24 text-xs text-tabarak-ink placeholder:text-slate-400 focus:border-tabarak-blue focus:bg-white focus:ring-1 focus:ring-tabarak-blue md:h-12 md:border-0 md:bg-white md:pl-12 md:pr-28 md:text-sm md:focus:ring-2 md:focus:ring-tabarak-orange [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden'"
+                ? 'h-9 w-full rounded-lg border border-[#E7EAF3] bg-[#F8F9FC] pl-3 pr-16 text-xs text-tabarak-ink placeholder:text-slate-400 focus:border-tabarak-blue focus:bg-white focus:ring-1 focus:ring-tabarak-blue [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden'
+                : 'h-9.5 w-full rounded-lg border border-[#E7EAF3] bg-[#F8F9FC] pl-3 pr-16 text-xs text-tabarak-ink placeholder:text-slate-400 focus:border-tabarak-blue focus:bg-white focus:ring-1 focus:ring-tabarak-blue md:h-12 md:border-0 md:bg-white md:pl-5 md:pr-20 md:text-sm md:focus:ring-2 md:focus:ring-tabarak-orange [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden'"
             placeholder="Search products or SKU"
             autocomplete="off"
             @input="handleInput"
@@ -98,13 +94,12 @@ onBeforeUnmount(() => {
             </button>
 
             <button
-                class="rounded-md bg-tabarak-blue font-bold text-white transition hover:bg-[#3147C8]"
-                :class="compact
-                    ? 'min-h-7 px-2.5 text-[11px]'
-                    : 'min-h-7.5 px-3 text-xs md:min-h-9 md:px-4 md:text-xs'"
+                class="grid size-7 place-items-center rounded-md text-tabarak-blue transition hover:bg-tabarak-mist md:size-9"
                 type="submit"
+                aria-label="Search"
+                title="Search"
             >
-                Search
+                <Search :class="compact ? 'size-4' : 'size-4 md:size-5'" aria-hidden="true" />
             </button>
         </div>
     </form>

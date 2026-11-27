@@ -8,7 +8,9 @@ const submit = () => form.post(route('admin.login.store'), { onFinish: () => for
 </script>
 
 <template>
-    <Head title="Admin sign in" />
+    <Head title="Admin sign in">
+        <meta name="robots" content="noindex,nofollow,noarchive" />
+    </Head>
     <AdminAuthLayout>
         <div class="surface p-6 md:p-8">
             <p class="eyebrow">Protected area</p>

@@ -13,17 +13,17 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
-                display: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Manrope', ...defaultTheme.fontFamily.sans],
+                display: ['DM Sans', 'Manrope', ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                forest: { 50: '#eef5f1', 100: '#dbe9e1', 600: '#1e5b45', 700: '#184b39', 800: '#12382b', 900: '#0b271e' },
-                saffron: { 100: '#f5ead5', 400: '#d7a854', 500: '#c9963e', 600: '#ac7930' },
-                oat: { 50: '#fbfaf7', 100: '#f5f2eb', 200: '#e9e3d8', 300: '#d8cebe' },
-                tabarak: { blue: '#4058E1', orange: '#FF5602', mist: '#F5F7FF', line: '#DDE2FF', ink: '#15182A' },
+                forest: { 50: '#F3F4F2', 100: '#E9ECE8', 600: '#43584C', 700: '#33453B', 800: '#27362E', 900: '#1B2721' },
+                saffron: { 100: '#FBE9DE', 400: '#F38A59', 500: '#F05A28', 600: '#D94B1E' },
+                oat: { 50: '#FAF9F6', 100: '#F4F2ED', 200: '#E9E6DF', 300: '#D9D4CA' },
+                tabarak: { blue: '#24324A', orange: '#F05A28', mist: '#F4F2ED', line: '#E8E5DE', ink: '#191B20' },
             },
             boxShadow: {
-                soft: '0 14px 40px rgba(18, 56, 43, 0.08)',
+                soft: '0 18px 50px rgba(25, 27, 32, 0.08)',
             },
         },
     },

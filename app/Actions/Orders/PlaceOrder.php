@@ -28,7 +28,13 @@ class PlaceOrder
         private readonly ProductInventory $inventory,
     ) {}
 
-    public function handle(string $customerName, string $customerPhone, ?string $customerAddress = null): Order
+    public function handle(
+        string $customerName,
+        string $customerPhone,
+        ?string $purchaseOrderNumber = null,
+        ?string $billingAddress = null,
+        ?string $shippingAddress = null,
+    ): Order
     {
         $lines = $this->cart->lines();
         if ($lines->isEmpty()) {
@@ -38,7 +44,7 @@ class PlaceOrder
         $token = (string) Str::uuid();
 
         try {
-            $order = DB::transaction(function () use ($customerName, $customerPhone, $customerAddress, $lines, $token): Order {
+            $order = DB::transaction(function () use ($customerName, $customerPhone, $purchaseOrderNumber, $billingAddress, $shippingAddress, $lines, $token): Order {
                 $products = Product::query()
                     ->whereKey($lines->map(fn (CartLineData $line) => $line->product->id))
                     ->lockForUpdate()
@@ -57,6 +63,9 @@ class PlaceOrder
                     }
 
                     $this->inventory->assertAvailable($product, $line->quantity);
+                    // CartService has already limited custom pricing to authenticated admins.
+                    // Preserve that effective price when the order is created instead of
+                    // silently reverting the invoice back to the catalogue price.
                     $unitPriceCents = $line->unitPriceCents;
 
                     return [
@@ -72,7 +81,9 @@ class PlaceOrder
                     'public_token' => $token,
                     'customer_name' => $customerName,
                     'customer_phone' => $customerPhone,
-                    'customer_address' => $customerAddress,
+                    'purchase_order_number' => $purchaseOrderNumber,
+                    'billing_address' => $billingAddress,
+                    'shipping_address' => $shippingAddress,
                     'status' => OrderStatus::Pending,
                     'currency' => Money::CURRENCY,
                     'subtotal' => Money::fromCents($subtotalCents),

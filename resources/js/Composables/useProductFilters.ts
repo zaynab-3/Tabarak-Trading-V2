@@ -21,13 +21,9 @@ export function useProductFilters(path: string, initial: ProductFilters, default
             { ...filters },
             {
                 preserveState: true,
-                preserveScroll,
+                preserveScroll: true,
                 replace: true,
-                onSuccess: () => {
-                    if (!preserveScroll) {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                },
+                showProgress: false,
             },
         );
     };

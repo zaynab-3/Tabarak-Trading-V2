@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, BadgeCheck, Box, Layers3 } from '@lucide/vue';
+import { ArrowLeft, BadgeCheck } from '@lucide/vue';
 import ProductGallery from '@/Components/Storefront/ProductGallery.vue';
 import ProductOrderPanel from '@/Components/Storefront/ProductOrderPanel.vue';
 import ProductGrid from '@/Components/Storefront/ProductGrid.vue';
@@ -15,51 +15,40 @@ defineProps<{ product: Product; relatedProducts: Product[] }>();
 <template>
     <Head :title="product.name" />
     <StorefrontLayout>
-        <div class="page-shell pb-8 pt-2 md:pb-10 md:pt-3">
-            <Link :href="route('shop')" class="mb-3 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-tabarak-blue transition hover:text-tabarak-orange">
+        <div class="page-shell pb-12 pt-5 sm:pt-7 lg:pb-16">
+            <Link :href="route('shop')" class="inline-flex min-h-10 items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-tabarak-ink">
                 <ArrowLeft class="size-4" /> Back to catalogue
             </Link>
 
-            <div class="grid gap-8 md:grid-cols-[0.95fr_1.05fr] lg:gap-14">
+            <div class="mt-4 grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] md:gap-10 lg:mt-6 lg:gap-16">
                 <ProductGallery :images="product.images || []" :name="product.name" />
 
-                <section class="md:py-3">
-                    <div class="flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wider text-tabarak-orange">
+                <section class="md:pt-5 lg:pt-8">
+                    <div class="flex flex-wrap gap-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-tabarak-orange sm:text-xs">
                         <span v-if="product.brand">{{ product.brand.name }}</span>
-                        <span v-if="product.brand && product.category" aria-hidden="true">·</span>
+                        <span v-if="product.brand && product.category" class="text-slate-300" aria-hidden="true">/</span>
                         <span v-if="product.category">{{ product.category.name }}</span>
                     </div>
-                    <h1 class="mt-4 font-display text-4xl font-bold leading-tight text-tabarak-ink md:text-5xl">{{ product.name }}</h1>
-                    <p v-if="product.short_description" class="mt-5 text-lg leading-8 text-slate-600">{{ product.short_description }}</p>
-
-                    <div class="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-tabarak-line bg-tabarak-line">
-                        <div class="bg-white p-4">
-                            <Box class="size-5 text-tabarak-blue" />
-                            <span class="mt-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Format</span>
-                            <strong class="mt-1 block text-sm text-tabarak-ink">{{ productPackLabel(product) }}</strong>
-                        </div>
-                        <div class="bg-white p-4">
-                            <Layers3 class="size-5 text-tabarak-blue" />
-                            <span class="mt-2 block text-xs font-bold uppercase tracking-wider text-slate-400">SKU</span>
-                            <strong class="mt-1 block text-sm text-tabarak-ink">{{ product.sku || 'On request' }}</strong>
-                        </div>
-                    </div>
+                    <h1 class="mt-3 max-w-2xl font-display text-[clamp(2rem,5vw,4rem)] font-bold leading-[1.02] tracking-[-0.05em] text-tabarak-ink">{{ product.name }}</h1>
+                    <p class="mt-3 text-sm font-semibold text-slate-400">{{ productPackLabel(product) }}</p>
+                    <p v-if="product.short_description" class="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">{{ product.short_description }}</p>
 
                     <ProductOrderPanel :product="product" />
 
-                    <div v-if="!product.unit_price" class="mt-7 flex items-start gap-3 rounded-md border-l-4 border-tabarak-orange bg-[#FFF4EE] p-4">
+                    <div v-if="!product.unit_price" class="mt-7 flex items-start gap-3 rounded-[20px] bg-[#F8ECE5] p-4">
                         <BadgeCheck class="mt-0.5 size-5 shrink-0 text-tabarak-orange" />
-                        <p class="text-sm leading-6 text-slate-700">Wholesale catalogue listing. Contact Tabarak Trading for current availability and ordering details.</p>
+                        <p class="text-sm leading-6 text-slate-700">Contact Tabarak Trading for current availability and pricing.</p>
                     </div>
                 </section>
             </div>
 
-            <section v-if="product.description" class="mt-12 border-t border-tabarak-line pt-8 md:mt-16">
-                <h2 class="font-display text-2xl font-bold text-tabarak-ink">Product details</h2>
-                <p class="mt-4 max-w-3xl whitespace-pre-line text-base leading-8 text-slate-600">{{ product.description }}</p>
+            <section v-if="product.description" class="mt-12 max-w-3xl md:mt-16">
+                <p class="eyebrow">About this product</p>
+                <h2 class="mt-2 font-display text-2xl font-bold tracking-[-0.03em] text-tabarak-ink sm:text-3xl">Product details</h2>
+                <p class="mt-4 whitespace-pre-line text-base leading-8 text-slate-600">{{ product.description }}</p>
             </section>
 
-            <section v-if="relatedProducts.length" class="mt-14 border-t border-tabarak-line pt-10">
+            <section v-if="relatedProducts.length" class="mt-14 md:mt-20">
                 <SectionHeading eyebrow="Keep browsing" title="Related products" />
                 <div class="mt-7"><ProductGrid :products="relatedProducts" /></div>
             </section>

@@ -26,7 +26,7 @@ defineProps<{ notices: Paginated<OrderDeletionNotice> }>();
                         <td class="px-4 py-3">
                             <p class="font-semibold text-tabarak-ink">{{ notice.customer_name }}</p>
                             <p class="mt-1 text-xs text-slate-500">{{ notice.customer_phone }}</p>
-                            <p v-if="notice.customer_address" class="mt-0.5 text-xs text-slate-400 truncate max-w-xs" :title="notice.customer_address">{{ notice.customer_address }}</p>
+                            <p v-if="notice.shipping_address || notice.billing_address" class="mt-0.5 text-xs text-slate-400 truncate max-w-xs" :title="notice.shipping_address || notice.billing_address || ''">{{ notice.shipping_address || notice.billing_address }}</p>
                         </td>
                         <td class="px-4 py-3"><p class="font-semibold" :class="notice.deletion_mode === 'cancel_restore_stock' ? 'text-emerald-700' : 'text-tabarak-orange'">{{ notice.deletion_mode === 'cancel_restore_stock' ? 'Cancelled; stock returned' : 'Record deleted; stock kept' }}</p><p class="mt-1 text-xs text-slate-500">{{ notice.restored_quantity }} unit{{ notice.restored_quantity === 1 ? '' : 's' }} restored</p></td>
                         <td class="px-4 py-3 font-bold text-tabarak-ink">{{ formatMoney(notice.total) }}</td>

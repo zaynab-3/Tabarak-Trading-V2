@@ -1,127 +1,94 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, ShieldCheck, ShoppingCart } from '@lucide/vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { ArrowLeft, ShoppingBag } from '@lucide/vue';
+import { ref, watch } from 'vue';
 import CartLineItem from '@/Components/Storefront/CartLineItem.vue';
 import CheckoutCustomerForm from '@/Components/Storefront/CheckoutCustomerForm.vue';
 import OrderTotals from '@/Components/Orders/OrderTotals.vue';
 import StorefrontLayout from '@/Layouts/StorefrontLayout.vue';
-import type { PageProps } from '@/types';
 import type { CartItem, CartSummary } from '@/types/orders';
-import { computed, ref, watch } from 'vue';
+import { useStorefrontCart } from '@/Composables/useStorefrontCart';
 
 const props = defineProps<{ cart: CartSummary }>();
-const page = usePage<PageProps>();
-const isAdmin = computed(() => Boolean(page.props.auth?.user?.is_admin));
+const checkoutOpen = ref(false);
+const localCart = ref<CartSummary>({ ...props.cart, items: props.cart.items.map((item) => ({ ...item })) });
+const { syncCart } = useStorefrontCart();
 
-const cartData = ref<CartSummary>({
-    items: [...props.cart.items],
-    item_count: props.cart.item_count,
-    subtotal: props.cart.subtotal,
-    has_custom_prices: props.cart.has_custom_prices,
-    currency: props.cart.currency,
-});
+watch(() => props.cart, (cart) => {
+    localCart.value = { ...cart, items: cart.items.map((item) => ({ ...item })) };
+}, { deep: true });
 
-watch(
-    () => props.cart,
-    (newCart) => {
-        cartData.value = {
-            items: [...newCart.items],
-            item_count: newCart.item_count,
-            subtotal: newCart.subtotal,
-            has_custom_prices: newCart.has_custom_prices,
-            currency: newCart.currency,
-        };
-    },
-    { deep: true },
-);
-
-const recalculateTotals = () => {
-    let totalCents = 0;
-    let totalCount = 0;
-    let hasCustom = false;
-
-    for (const line of cartData.value.items) {
-        const unitCents = Math.round(Number(line.unit_price) * 100);
-        const lineCents = unitCents * line.quantity;
-        line.line_total = (lineCents / 100).toFixed(2);
-        totalCents += lineCents;
-        totalCount += line.quantity;
-        if (line.is_custom_price) {
-            hasCustom = true;
-        }
-    }
-
-    cartData.value.subtotal = (totalCents / 100).toFixed(2);
-    cartData.value.item_count = totalCount;
-    cartData.value.has_custom_prices = hasCustom;
-    page.props.cart = { ...cartData.value };
+const recalcOptimistic = () => {
+    const subtotal = localCart.value.items.reduce((sum, item) => sum + Math.round(Number(item.line_total) * 100), 0);
+    localCart.value.subtotal = (subtotal / 100).toFixed(2);
+    localCart.value.item_count = localCart.value.items.reduce((sum, item) => sum + item.quantity, 0);
+    syncCart(localCart.value);
 };
 
-const handleItemUpdate = (index: number, updatedItem: CartItem) => {
-    cartData.value.items[index] = updatedItem;
-    recalculateTotals();
+const handleItemUpdate = (updated: CartItem) => {
+    const index = localCart.value.items.findIndex((item) => item.product.id === updated.product.id);
+    if (index >= 0) localCart.value.items[index] = { ...updated };
+    recalcOptimistic();
 };
 
-const handleCartSynced = (serverCart: CartSummary) => {
-    cartData.value = {
-        items: [...serverCart.items],
-        item_count: serverCart.item_count,
-        subtotal: serverCart.subtotal,
-        has_custom_prices: serverCart.has_custom_prices,
-        currency: serverCart.currency,
-    };
-    page.props.cart = { ...cartData.value };
+const handleSynced = (cart: CartSummary) => {
+    localCart.value = { ...cart, items: cart.items.map((item) => ({ ...item })) };
+    syncCart(cart);
 };
 
-const handleItemRemove = (productId: number) => {
-    cartData.value.items = cartData.value.items.filter((item) => item.product.id !== productId);
-    recalculateTotals();
+const handleRemove = (productId: number) => {
+    localCart.value.items = localCart.value.items.filter((item) => item.product.id !== productId);
+    recalcOptimistic();
 };
 </script>
 
 <template>
     <Head title="Cart" />
     <StorefrontLayout>
-        <div class="page-shell py-5 md:py-8">
-            <div class="flex flex-wrap items-end justify-between gap-4 border-b border-tabarak-line pb-5">
-                <div>
+        <div class="page-shell py-6 sm:py-9 lg:py-11">
+            <div class="flex items-start gap-3 sm:gap-4">
+                <Link
+                    :href="route('shop')"
+                    class="mt-0.5 grid size-11 shrink-0 place-items-center rounded-full bg-white text-tabarak-ink transition hover:bg-[#ECEAE5]"
+                    aria-label="Back to catalogue"
+                    title="Back to catalogue"
+                >
+                    <ArrowLeft class="size-[18px]" />
+                </Link>
+                <div class="min-w-0">
                     <p class="eyebrow">Your order</p>
-                    <h1 class="mt-1 font-display text-3xl font-bold text-tabarak-ink md:text-4xl">Shopping cart</h1>
-                    <p class="mt-2 text-sm text-slate-500">{{ cartData.item_count }} item{{ cartData.item_count === 1 ? '' : 's' }} · USD pricing</p>
+                    <h1 class="mt-1 font-display text-[clamp(2rem,5vw,3.35rem)] font-bold tracking-[-0.05em] text-tabarak-ink">Shopping cart</h1>
+                    <p class="mt-1.5 text-sm font-semibold text-slate-400">{{ localCart.item_count }} item{{ localCart.item_count === 1 ? '' : 's' }} · USD pricing</p>
                 </div>
-                <Link :href="route('shop')" class="btn-secondary"><ArrowLeft class="size-4" /> Continue shopping</Link>
             </div>
 
-            <div v-if="isAdmin && cartData.has_custom_prices" class="mt-4 flex items-center gap-2.5 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                <ShieldCheck class="size-5 shrink-0 text-amber-600" />
-                <p>
-                    <span class="font-bold">Custom rates active:</span> One or more items in this cart have custom rates calculated by admin.
-                </p>
-            </div>
-
-            <div v-if="cartData.items.length" class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-                <section class="space-y-4" aria-label="Cart items">
+            <div v-if="localCart.items.length" class="mt-7 grid gap-7 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start xl:gap-10">
+                <section class="grid gap-3" aria-label="Cart items">
                     <CartLineItem
-                        v-for="(item, index) in cartData.items"
+                        v-for="item in localCart.items"
                         :key="item.product.id"
                         :item="item"
-                        @update:item="(updated) => handleItemUpdate(index, updated)"
-                        @synced="handleCartSynced"
-                        @remove="handleItemRemove"
+                        @update:item="handleItemUpdate"
+                        @synced="handleSynced"
+                        @remove="handleRemove"
                     />
                 </section>
-                <aside class="space-y-4 lg:sticky lg:top-24">
-                    <OrderTotals :subtotal="cartData.subtotal" :total="cartData.subtotal" />
-                    <CheckoutCustomerForm />
+
+                <aside class="space-y-3 lg:sticky lg:top-24">
+                    <OrderTotals :subtotal="localCart.subtotal" :total="localCart.subtotal" />
+                    <button type="button" class="btn-primary w-full" @click="checkoutOpen = true">Checkout</button>
+                    <p class="px-3 text-center text-[11px] font-semibold leading-5 text-slate-400">Customer, billing and delivery details are completed at checkout.</p>
                 </aside>
             </div>
 
-            <section v-else class="mx-auto my-16 max-w-lg rounded-lg border border-tabarak-line bg-tabarak-mist p-8 text-center">
-                <ShoppingCart class="mx-auto size-10 text-tabarak-blue" />
-                <h2 class="mt-4 font-display text-2xl font-bold text-tabarak-ink">Your cart is empty</h2>
-                <p class="mt-2 text-sm text-slate-500">Browse the catalogue and add priced products to start an order.</p>
-                <Link :href="route('shop')" class="btn-primary mt-5">Browse products</Link>
+            <section v-else class="mx-auto my-20 max-w-lg text-center">
+                <span class="mx-auto grid size-16 place-items-center rounded-full bg-[#ECEAE5] text-tabarak-ink"><ShoppingBag class="size-7" /></span>
+                <h2 class="mt-5 font-display text-2xl font-bold tracking-[-0.03em] text-tabarak-ink">Your cart is empty</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-500">Browse the catalogue and add products to start an order.</p>
+                <Link :href="route('shop')" class="btn-primary mt-6">Browse products</Link>
             </section>
         </div>
+
+        <CheckoutCustomerForm :open="checkoutOpen" :total="localCart.subtotal" :item-count="localCart.item_count" @close="checkoutOpen = false" />
     </StorefrontLayout>
 </template>

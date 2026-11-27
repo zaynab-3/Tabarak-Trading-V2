@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, LoaderCircle, ShieldCheck } from '@lucide/vue';
-import { computed } from 'vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ArrowLeft, LoaderCircle, Search, Send, ShieldCheck } from '@lucide/vue';
+import { computed, reactive, ref } from 'vue';
 import AiAnalyzerStatus from '@/Components/Admin/AiAnalyzerStatus.vue';
 import ImportAnalysisCard from '@/Components/Admin/ImportAnalysisCard.vue';
-import PageHeader from '@/Components/Admin/PageHeader.vue';
+import ConfirmDialog from '@/Components/Shared/ConfirmDialog.vue';
 import PublishImportBatchButton from '@/Components/Admin/PublishImportBatchButton.vue';
 import ReanalyzeImportBatchButton from '@/Components/Admin/ReanalyzeImportBatchButton.vue';
 import { useImportBatchPolling } from '@/Composables/useImportBatchPolling';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import type { ImportBatch, ProductImageAnalyzerStatus, TaxonomyRef } from '@/types/catalogue';
+import type { ImportBatch, ImportItem, ImportPublishDraft, ProductImageAnalyzerStatus, TaxonomyRef } from '@/types/catalogue';
 
 const props = defineProps<{
     batch: ImportBatch;
@@ -18,9 +18,39 @@ const props = defineProps<{
     canReanalyze: boolean;
 }>();
 
-const publishableCount = computed(() => props.batch.items?.filter(
-    (item) => item.status === 'review' && item.suggested_name && !item.approved_product_id,
-).length ?? 0);
+const drafts = reactive<Record<number, ImportPublishDraft | null>>({});
+const query = ref('');
+const filter = ref<'all' | 'unpublished' | 'priced' | 'published'>('unpublished');
+const confirming = ref(false);
+const batchForm = useForm<{ items: ImportPublishDraft[] }>({ items: [] });
+const items = computed(() => props.batch.items ?? []);
+const unpublished = computed(() => items.value.filter(item => ['review', 'failed'].includes(item.status) && !item.approved_product_id));
+const priced = computed(() => unpublished.value.map(item => drafts[item.id]).filter((draft): draft is ImportPublishDraft => !!draft));
+const publishableCount = computed(() => unpublished.value.filter(item => item.status === 'review' && item.suggested_name).length);
+
+const updateDraft = (id: number, draft: ImportPublishDraft | null) => { drafts[id] = draft; };
+const isVisible = (item: ImportItem) => {
+    if (filter.value === 'unpublished' && (item.status === 'approved' || item.status === 'rejected')) return false;
+    if (filter.value === 'priced' && (!drafts[item.id] || !unpublished.value.some(row => row.id === item.id))) return false;
+    if (filter.value === 'published' && item.status !== 'approved') return false;
+    const needle = query.value.trim().toLowerCase();
+    return !needle || [item.id, item.suggested_name, item.suggested_brand, item.suggested_category, drafts[item.id]?.name, drafts[item.id]?.sku, item.suggested_metadata?.flavor].some(value => String(value ?? '').toLowerCase().includes(needle));
+};
+const visibleCount = computed(() => items.value.filter(isVisible).length);
+const publishPriced = () => {
+    if (batchForm.processing || !priced.value.length) return;
+    batchForm.items = priced.value.slice(0, 250);
+    confirming.value = false;
+    batchForm.post(route('admin.imports.publish.store', props.batch.id), {
+        preserveScroll: true,
+        onSuccess: () => batchForm.reset(),
+    });
+};
+const batchErrors = computed(() => Object.entries(batchForm.errors).map(([key, message]) => {
+    const match = key.match(/^items\.(\d+)\./);
+    const draft = match ? batchForm.items[Number(match[1])] : null;
+    return { key, text: (draft ? `Item #${draft.id}: ` : '') + message };
+}));
 
 useImportBatchPolling(
     () => props.batch.total_items > 0 && props.batch.processed_items < props.batch.total_items,
@@ -30,35 +60,66 @@ useImportBatchPolling(
 <template>
     <Head :title="batch.name || `Import #${batch.id}`" />
     <AdminLayout>
-        <PageHeader
-            eyebrow="Import review"
-            :title="batch.name || `Import #${batch.id}`"
-            :description="`${batch.processed_items} of ${batch.total_items} images analyzed or prepared for review.`"
-        >
-            <div class="flex flex-wrap items-center gap-2">
-                <PublishImportBatchButton v-if="publishableCount" :batch-id="batch.id" :count="publishableCount" />
-                <ReanalyzeImportBatchButton v-if="canReanalyze" :batch-id="batch.id" />
-                <Link :href="route('admin.imports.index')" class="btn-secondary">
-                    <ArrowLeft class="size-4" /> All batches
-                </Link>
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="min-w-0">
+                <p class="eyebrow">Import workspace</p>
+                <h1 class="mt-1 break-words font-display text-2xl font-bold text-tabarak-ink">{{ batch.name || `Import #${batch.id}` }}</h1>
+                <p class="mt-1 text-xs text-slate-500">{{ batch.processed_items }} of {{ batch.total_items }} analyzed · {{ batch.approved_items }} published</p>
             </div>
-        </PageHeader>
-
-        <AiAnalyzerStatus :analyzer="analyzer" class="mb-5" />
-        <div class="mb-5 flex items-start gap-3 rounded-lg border border-tabarak-line bg-white p-4 text-sm leading-6 text-slate-600">
-            <ShieldCheck class="mt-0.5 size-5 shrink-0 text-tabarak-blue" />
-            <p><strong class="text-tabarak-ink">Taxonomy rule:</strong> a detected brand can be created when the product is published. Categories are never created by AI; it can only select an active existing category or leave the product uncategorized for admin review.</p>
-        </div>
-        <div
-            v-if="batch.processed_items < batch.total_items"
-            class="mb-5 flex items-center gap-3 rounded-lg border border-tabarak-line bg-tabarak-mist p-4 text-sm font-semibold text-tabarak-blue"
-        >
-            <LoaderCircle class="size-5 animate-spin" />
-            Analysis is running. This page refreshes automatically as each product finishes.
+            <div class="flex flex-wrap items-center gap-2">
+                <div :class="{ 'pointer-events-none opacity-50': batchForm.processing }"><ReanalyzeImportBatchButton v-if="canReanalyze" :batch-id="batch.id" /></div>
+                <Link :href="route('admin.imports.index')" class="btn-secondary !min-h-9 !px-3 !py-1 text-xs"><ArrowLeft class="size-4" /> All batches</Link>
+            </div>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <ImportAnalysisCard v-for="item in batch.items" :key="item.id" :item="item" :categories="categories" />
+        <details class="mb-4 rounded-lg border border-tabarak-line bg-white p-3 text-xs text-slate-600">
+            <summary class="cursor-pointer font-semibold">{{ analyzer.enabled ? analyzer.provider + ' active' : 'Manual review mode' }} · Import settings &amp; rules</summary>
+            <AiAnalyzerStatus :analyzer="analyzer" class="mt-3" />
+            <p class="mt-3 flex items-start gap-2 leading-5"><ShieldCheck class="size-4 shrink-0 text-tabarak-blue" /> Existing active categories only; brands may be created when publishing. AI information must be checked by the administrator.</p>
+            <div v-if="publishableCount && !priced.length && !batchForm.processing" class="mt-3"><PublishImportBatchButton :batch-id="batch.id" :count="publishableCount" /></div>
+        </details>
+
+        <div v-if="batch.processed_items < batch.total_items" class="mb-3 flex items-center gap-2 rounded-lg border border-tabarak-line bg-tabarak-mist p-3 text-xs font-semibold text-tabarak-blue">
+            <LoaderCircle class="size-4 animate-spin" /> Analysis is running. Results refresh automatically.
         </div>
+
+        <section class="overflow-hidden rounded-xl border border-tabarak-line bg-white">
+            <div class="flex flex-wrap items-center gap-2 border-b border-tabarak-line p-3">
+                <div class="relative min-w-[180px] flex-1">
+                    <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                    <input v-model="query" type="search" aria-label="Search import items" placeholder="Search name, ID, category…" class="field-input !min-h-10 !pl-9" />
+                </div>
+                <select v-model="filter" aria-label="Filter import items" class="field-input !min-h-10 !w-auto">
+                    <option value="unpublished">Unpublished</option>
+                    <option value="all">All items</option>
+                    <option value="priced">Priced &amp; ready</option>
+                    <option value="published">Published</option>
+                </select>
+                <button type="button" class="btn-primary !min-h-10 !px-4 !py-2 text-xs" :disabled="batchForm.processing || !priced.length" @click="confirming = true">
+                    <Send class="size-4" /> {{ batchForm.processing ? 'Publishing…' : 'Publish priced (' + Math.min(priced.length, 250) + ')' }}
+                </button>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-1 border-b border-tabarak-line bg-tabarak-mist px-3 py-2 text-[11px] font-medium text-slate-600">
+                <span>{{ visibleCount }} shown · {{ priced.length }} priced · {{ unpublished.length }} awaiting publication</span>
+                <span>Enter moves to next visible price field. Review only when corrections are needed.</span>
+            </div>
+            <div v-if="batchErrors.length" role="alert" class="border-b border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                <p class="font-bold">No items were published. Correct the following:</p>
+                <ul class="mt-1 list-disc space-y-1 pl-5"><li v-for="error in batchErrors" :key="error.key">{{ error.text }}</li></ul>
+            </div>
+            <div class="import-list-heading hidden border-b border-tabarak-line bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500 md:grid">
+                <span>Image</span><span>Product / analysis</span><span>Price (USD)</span><span class="text-right">Actions</span>
+            </div>
+            <ImportAnalysisCard v-for="item in items" v-show="isVisible(item)" :key="item.id" :item="item" :categories="categories" :batch-busy="batchForm.processing" @draft="updateDraft" />
+            <p v-if="!visibleCount" class="p-8 text-center text-sm text-slate-500">No items match this view.</p>
+        </section>
+        <ConfirmDialog :open="confirming" title="Publish priced products?" :description="`Publish ${Math.min(priced.length, 250)} products using their entered prices and current edited details? Unpriced items will remain unpublished. Make sure the selected product details are correct.`" confirm-label="Publish priced items" :processing="batchForm.processing" @cancel="confirming = false" @confirm="publishPriced" />
     </AdminLayout>
 </template>
+
+<style scoped>
+.import-list-heading {
+    grid-template-columns: 64px minmax(0, 1fr) 112px 236px;
+    gap: 14px;
+}
+</style>

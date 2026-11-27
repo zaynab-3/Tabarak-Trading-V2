@@ -106,7 +106,7 @@ export interface ImportItem {
     suggested_metadata: Record<string, string | null> | null;
     media: MediaItem;
     approved_product_id: number | null;
-    approved_product?: Pick<Product, 'id' | 'name' | 'slug' | 'unit_price'> | null;
+    approved_product?: Pick<Product, 'id' | 'name' | 'slug' | 'unit_price' | 'status'> | null;
 }
 
 export interface ProductImageAnalyzerStatus {

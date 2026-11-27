@@ -35,6 +35,7 @@ Route::prefix($adminPrefix)->name('admin.')->group(function () {
         Route::post('/logout', [AdminSessionController::class, 'destroy'])->name('logout');
         Route::get('/', DashboardController::class)->name('dashboard');
 
+        Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
         Route::resource('products', ProductController::class)->except(['show']);
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::resource('order-notices', OrderDeletionNoticeController::class)->only(['index', 'show']);

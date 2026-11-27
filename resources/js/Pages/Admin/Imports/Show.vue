@@ -21,6 +21,15 @@ const drafts = reactive<Record<number, ImportPublishDraft | null>>({});
 const query = ref('');
 const filter = ref<'all' | 'unpublished' | 'priced' | 'published'>('unpublished');
 const confirming = ref(false);
+const quantityCommand = ref({ value: false, revision: 0 });
+const rowBusy = reactive<Record<number, boolean>>({});
+const anyRowBusy = computed(() => Object.values(rowBusy).some(Boolean));
+const setAllQuantity = (event: Event) => {
+    const target = event.target as HTMLSelectElement;
+    if (target.value === '') return;
+    quantityCommand.value = { value: target.value === 'open', revision: quantityCommand.value.revision + 1 };
+    target.value = '';
+};
 const batchForm = useForm<{ items: ImportPublishDraft[] }>({ items: [] });
 const items = computed(() => props.batch.items ?? []);
 const unpublished = computed(() => items.value.filter(item => ['review', 'failed'].includes(item.status) && !item.approved_product_id));
@@ -36,12 +45,13 @@ const isVisible = (item: ImportItem) => {
 };
 const visibleCount = computed(() => items.value.filter(isVisible).length);
 const publishPriced = () => {
-    if (batchForm.processing || !priced.value.length) return;
+    if (batchForm.processing || anyRowBusy.value || !priced.value.length) return;
     batchForm.items = priced.value.slice(0, 250);
     confirming.value = false;
     batchForm.post(route('admin.imports.publish.store', props.batch.id), {
         preserveScroll: true,
         onSuccess: () => batchForm.reset(),
+        onError: () => document.getElementById('priced-import-errors')?.scrollIntoView({ block: 'center' }),
     });
 };
 const batchErrors = computed(() => Object.entries(batchForm.errors).map(([key, message]) => {
@@ -65,7 +75,7 @@ useImportBatchPolling(
                 <p class="mt-1 text-xs text-slate-500">{{ batch.processed_items }} of {{ batch.total_items }} analyzed · {{ batch.approved_items }} published</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <div :class="{ 'pointer-events-none opacity-50': batchForm.processing }"><ReanalyzeImportBatchButton v-if="canReanalyze" :batch-id="batch.id" /></div>
+                <div :class="{ 'pointer-events-none opacity-50': batchForm.processing || anyRowBusy }"><ReanalyzeImportBatchButton v-if="canReanalyze" :batch-id="batch.id" /></div>
                 <Link :href="route('admin.imports.index')" class="btn-secondary !min-h-9 !px-3 !py-1 text-xs"><ArrowLeft class="size-4" /> All batches</Link>
             </div>
         </div>
@@ -92,7 +102,12 @@ useImportBatchPolling(
                     <option value="priced">Priced &amp; ready</option>
                     <option value="published">Published</option>
                 </select>
-                <button type="button" class="btn-primary import-bulk !min-h-10 !px-4 !py-2 text-xs" :disabled="batchForm.processing || !priced.length" @click="confirming = true">
+                <select aria-label="Set open quantity for all items" class="field-input import-filter !min-h-10 !w-auto max-w-full" :disabled="batchForm.processing || anyRowBusy" @change="setAllQuantity">
+                    <option value="">Set quantity for all</option>
+                    <option value="open">Open quantity for all</option>
+                    <option value="closed">Clear open quantity</option>
+                </select>
+                <button type="button" class="btn-primary import-bulk !min-h-10 !px-4 !py-2 text-xs" :disabled="batchForm.processing || anyRowBusy || !priced.length" @click="confirming = true">
                     <Send class="size-4" /> {{ batchForm.processing ? 'Publishing…' : 'Publish priced (' + Math.min(priced.length, 250) + ')' }}
                 </button>
             </div>
@@ -100,14 +115,14 @@ useImportBatchPolling(
                 <span>{{ visibleCount }} shown · {{ priced.length }} priced · {{ unpublished.length }} awaiting publication</span>
                 <span>Enter moves to next visible price field. Review only when corrections are needed.</span>
             </div>
-            <div v-if="batchErrors.length" role="alert" class="border-b border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            <div v-if="batchErrors.length" id="priced-import-errors" role="alert" class="border-b border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
                 <p class="font-bold">No items were published. Correct the following:</p>
                 <ul class="mt-1 list-disc space-y-1 pl-5"><li v-for="error in batchErrors" :key="error.key">{{ error.text }}</li></ul>
             </div>
             <div class="import-list-heading border-b border-tabarak-line bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
                 <span>Image</span><span>Product / analysis</span><span>Price (USD)</span><span class="text-right">Actions</span>
             </div>
-            <ImportAnalysisCard v-for="item in items" v-show="isVisible(item)" :key="item.id" :item="item" :categories="categories" :batch-busy="batchForm.processing" @draft="updateDraft" />
+            <ImportAnalysisCard v-for="item in items" v-show="isVisible(item)" :key="item.id" :item="item" :categories="categories" :batch-busy="batchForm.processing || (anyRowBusy && !rowBusy[item.id])" :quantity-command="quantityCommand" @draft="updateDraft" @busy="(id, busy) => rowBusy[id] = busy" />
             <p v-if="!visibleCount" class="p-8 text-center text-sm text-slate-500">No items match this view.</p>
         </section>
         <ConfirmDialog :open="confirming" title="Publish priced products?" :description="`Publish ${Math.min(priced.length, 250)} products using their entered prices and current edited details? Unpriced items will remain unpublished. Make sure the selected product details are correct.`" confirm-label="Publish priced items" tone="warning" :processing="batchForm.processing" @cancel="confirming = false" @confirm="publishPriced" />
@@ -129,7 +144,7 @@ useImportBatchPolling(
 @container import-workspace (max-width: 479px) {
     .import-search { flex-basis: 100%; }
     .import-filter { flex: 1 1 130px; }
-    .import-bulk { flex: 1 1 130px; }
+    .import-bulk { flex: 1 1 100%; }
 }
 @media (pointer: coarse) {
     .import-toolbar input, .import-toolbar select { font-size: 16px; min-height: 44px !important; }

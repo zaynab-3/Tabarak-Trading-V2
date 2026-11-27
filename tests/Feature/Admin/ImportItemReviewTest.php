@@ -9,6 +9,7 @@ use App\Models\ImportItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
@@ -18,6 +19,8 @@ class ImportItemReviewTest extends TestCase
 {
     use RefreshDatabase;
 
+    private ?string $testMediaRoot = null;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,11 +28,37 @@ class ImportItemReviewTest extends TestCase
         // Keep test requests independent of a deployment URL or subdirectory.
         URL::forceRootUrl('http://localhost');
         URL::forceScheme('http');
+
+        // Use a unique disposable disk outside the checkout. On Windows the
+        // project's default fake disk may be unwritable or have mixed separators.
+        $this->testMediaRoot = rtrim(sys_get_temp_dir(), '/\\\\')
+            . DIRECTORY_SEPARATOR . 'tabarak-import-' . bin2hex(random_bytes(12));
+        $catalogue = $this->testMediaRoot . DIRECTORY_SEPARATOR . 'catalogue'
+            . DIRECTORY_SEPARATOR . now()->format('Y') . DIRECTORY_SEPARATOR . now()->format('m');
+        if (! mkdir($catalogue, 0700, true) && ! is_dir($catalogue)) {
+            throw new \RuntimeException('Cannot create isolated test media directory: '.$catalogue);
+        }
+
+        Storage::set('public', Storage::build([
+            'driver' => 'local',
+            'root' => $this->testMediaRoot,
+            'throw' => true,
+        ]));
+    }
+
+    protected function tearDown(): void
+    {
+        try {
+            if ($this->testMediaRoot !== null) {
+                File::deleteDirectory($this->testMediaRoot);
+            }
+        } finally {
+            parent::tearDown();
+        }
     }
 
     public function test_review_item_without_ai_name_can_be_published_with_manual_values(): void
     {
-        Storage::fake('public');
         Queue::fake();
 
         $admin = User::factory()->admin()->create();
@@ -92,7 +121,6 @@ class ImportItemReviewTest extends TestCase
 
     public function test_review_persists_corrected_ai_fields_and_validates_price(): void
     {
-        Storage::fake('public');
         Queue::fake();
 
         $admin = User::factory()->admin()->create();
@@ -154,7 +182,6 @@ class ImportItemReviewTest extends TestCase
 
     public function test_unapproved_import_item_can_be_deleted_with_orphaned_media(): void
     {
-        Storage::fake('public');
         Queue::fake();
 
         $admin = User::factory()->admin()->create();

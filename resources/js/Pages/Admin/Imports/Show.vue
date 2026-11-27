@@ -116,7 +116,7 @@ useImportBatchPolling(
 
 <style scoped>
 .import-workspace { container: import-workspace / inline-size; }
-.import-toolbar { top: 64px; }
+.import-toolbar { top: 72px; }
 .import-search { flex-basis: 180px; }
 .import-list-heading { display: none; }
 @container import-workspace (min-width: 690px) {

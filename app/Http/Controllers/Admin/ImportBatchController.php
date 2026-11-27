@@ -52,7 +52,7 @@ class ImportBatchController extends Controller
     public function show(ImportBatch $importBatch): Response
     {
         Gate::authorize('view', $importBatch);
-        $importBatch->load(['creator:id,name', 'items.media', 'items.approvedProduct:id,name,slug']);
+        $importBatch->load(['creator:id,name', 'items.media', 'items.approvedProduct:id,name,slug,unit_price']);
 
         return Inertia::render('Admin/Imports/Show', [
             'batch' => $importBatch,

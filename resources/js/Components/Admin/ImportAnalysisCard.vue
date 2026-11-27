@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { Link, useForm } from '@inertiajs/vue3';
 import { AlertTriangle, ExternalLink, Pencil, Send, Trash2, X } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import StatusBadge from '@/Components/Admin/StatusBadge.vue';
 import ConfirmDialog from '@/Components/Shared/ConfirmDialog.vue';
-import type { ImportItem, TaxonomyRef } from '@/types/catalogue';
+import type { ImportItem, ImportPublishDraft, TaxonomyRef } from '@/types/catalogue';
 
-const props = defineProps<{ item: ImportItem; categories: TaxonomyRef[] }>();
+const props = defineProps<{ item: ImportItem; categories: TaxonomyRef[]; batchBusy?: boolean }>();
+const emit = defineEmits<{ draft: [id: number, draft: ImportPublishDraft | null] }>();
 
 const reviewDialog = ref<HTMLDialogElement | null>(null);
+const reviewMounted = ref(false);
 const confirmingDelete = ref(false);
 
 const matchedCategory = computed(() => props.categories.find(
@@ -62,11 +64,25 @@ watch(suggestedFormValues, (next, previous) => {
 
 const priceValid = computed(() => /^\d+(?:\.\d{1,2})?$/.test(String(form.unit_price))
     && Number(form.unit_price) >= 0.01 && Number(form.unit_price) <= 9999999999.99);
-const canQuickPublish = computed(() => canReview.value && props.item.status === 'review' && !!props.item.suggested_name?.trim());
 const deleteForm = useForm({});
+const canQuickPublish = computed(() => canReview.value && !!form.name.trim());
+const rowCategory = computed(() => props.categories.find(category => category.id === Number(form.category_id))?.name ?? 'Uncategorized');
+const draft = computed<ImportPublishDraft | null>(() => canQuickPublish.value && priceValid.value && !form.processing && !deleteForm.processing ? { id: props.item.id, ...form.data() } : null);
+watch(draft, (value) => emit('draft', props.item.id, value), { immediate: true });
+const focusNextPrice = (event: KeyboardEvent) => {
+    const inputs = Array.from(document.querySelectorAll<HTMLInputElement>('[data-import-price]')).filter(input => !input.disabled && input.offsetParent !== null);
+    const index = inputs.indexOf(event.currentTarget as HTMLInputElement);
+    if (index >= 0 && index < inputs.length - 1) {
+        inputs[index + 1].focus();
+        inputs[index + 1].select();
+    }
+};
 
-const openReview = () => {
-    if (!canReview.value || form.processing || deleteForm.processing) return;
+
+const openReview = async () => {
+    if (!canReview.value || deleteForm.processing || props.batchBusy) return;
+    reviewMounted.value = true;
+    await nextTick();
     const dialog = reviewDialog.value;
     if (dialog && !dialog.open) {
         dialog.showModal();
@@ -80,7 +96,7 @@ const closeReview = () => {
 };
 
 const publish = () => {
-    if (!canReview.value || form.processing || deleteForm.processing || !form.name.trim() || !priceValid.value) return;
+    if (!canReview.value || form.processing || deleteForm.processing || props.batchBusy || !form.name.trim() || !priceValid.value) return;
     form.post(
         route('admin.imports.items.publish.store', [props.item.import_batch_id, props.item.id]),
         { preserveScroll: true, onSuccess: () => reviewDialog.value?.close(), onError: () => openReview() },
@@ -88,7 +104,7 @@ const publish = () => {
 };
 
 const destroy = () => {
-    if (!canDelete.value || deleteForm.processing) {
+    if (!canDelete.value || deleteForm.processing || props.batchBusy) {
         return;
     }
 
@@ -111,118 +127,54 @@ const confidenceLabel = (confidence: string | null) => {
 </script>
 
 <template>
-    <article class="surface self-start overflow-hidden">
-        <div class="aspect-[4/3] bg-tabarak-mist p-3">
-            <img
-                :src="item.media.url"
-                :alt="item.media.alt_text || `Import image ${item.id}`"
-                class="h-full w-full object-contain"
-            />
+    <article class="import-row border-b border-tabarak-line bg-white last:border-b-0">
+        <button type="button" class="import-thumbnail rounded-lg bg-tabarak-mist p-1" :disabled="!canReview || batchBusy" :aria-label="'Review image for item ' + item.id" @click="openReview">
+            <img :src="item.media.url" :alt="item.media.alt_text || 'Import image ' + item.id" loading="lazy" decoding="async" class="h-full w-full object-contain" />
+        </button>
+        <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span class="text-[11px] font-semibold text-slate-400">#{{ item.id }}</span>
+                <StatusBadge :status="item.status === 'approved' ? 'published' : item.status" />
+                <span v-if="confidenceLabel(item.confidence)" class="text-[11px] font-semibold text-slate-500">{{ confidenceLabel(item.confidence) }}</span>
+            </div>
+            <h2 class="mt-1 break-words text-sm font-bold leading-5 text-tabarak-ink">{{ (item.status === 'approved' ? item.approved_product?.name : form.name) || item.suggested_name || (['pending', 'processing'].includes(item.status) ? 'Analyzing product…' : 'Needs manual identification') }}</h2>
+            <p class="mt-0.5 break-words text-xs text-slate-500">{{ [form.brand, rowCategory, form.weight_value !== '' ? String(form.weight_value) + form.weight_unit : null, item.suggested_metadata?.flavor].filter(Boolean).join(' · ') }}</p>
+            <button v-if="canReview && (!form.name.trim() || !form.category_id || item.warnings?.length)" type="button" class="mt-1 flex max-w-full items-center gap-1 text-left text-[11px] font-semibold text-tabarak-orange" :disabled="batchBusy" @click="openReview">
+                <AlertTriangle class="size-3 shrink-0" />
+                <span class="truncate">{{ !form.name.trim() ? 'Name required' : !form.category_id ? 'Category not matched' : (item.warnings?.length || 0) + ' analysis warning(s)' }}</span>
+            </button>
         </div>
-
-        <div class="p-4">
-            <div class="flex items-center justify-between gap-3">
-                <span class="text-xs font-bold text-slate-400">Item #{{ item.id }}</span>
-                <StatusBadge :status="item.status" />
-            </div>
-
-            <h2 class="mt-3 font-display text-xl font-bold text-tabarak-ink">
-                {{ item.suggested_name || (['pending', 'processing'].includes(item.status) ? 'Analyzing product…' : 'Needs manual identification') }}
-            </h2>
-
-            <p class="mt-2 text-sm text-slate-500">
-                {{ [item.suggested_brand, item.suggested_category, item.suggested_weight].filter(Boolean).join(' · ') || 'No confident product details yet.' }}
-            </p>
-
-            <p v-if="confidenceLabel(item.confidence)" class="mt-2 text-xs font-bold text-emerald-700">
-                {{ confidenceLabel(item.confidence) }}
-            </p>
-
-            <dl v-if="item.suggested_metadata" class="mt-4 grid grid-cols-2 gap-2 text-xs">
-                <template v-for="(value, key) in item.suggested_metadata" :key="key">
-                    <div v-if="value" class="rounded bg-tabarak-mist p-2">
-                        <dt class="font-bold capitalize text-slate-500">{{ String(key).replaceAll('_', ' ') }}</dt>
-                        <dd class="mt-1 line-clamp-3 text-tabarak-ink">{{ value }}</dd>
-                    </div>
-                </template>
-            </dl>
-
-            <p v-if="item.warnings?.length" class="mt-3 border-l-2 border-tabarak-orange pl-3 text-xs leading-5 text-slate-600">
-                {{ item.warnings.join(' ') }}
-            </p>
-
-            <div v-if="canReview && !item.suggested_name" class="mt-3 flex items-start gap-2 border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
-                <AlertTriangle class="mt-0.5 size-4 shrink-0" />
-                <span>AI could not identify this image. Open Review to enter the product details manually, or delete the item if the uploaded image is unusable.</span>
-            </div>
-
-            <div v-else-if="item.suggested_name && !matchedCategory" class="mt-3 flex items-start gap-2 border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
-                <AlertTriangle class="mt-0.5 size-4 shrink-0" />
-                <span>AI could not assign <strong>{{ item.suggested_name }}</strong> to one of your existing categories. Open Review to choose one or leave it Uncategorized.</span>
-            </div>
-
-            <div v-if="canReview" class="mt-4 space-y-2 rounded-xl border border-tabarak-line p-3">
-                <label class="block">
-                    <span class="field-label">Price (USD)</span>
-                    <input v-model="form.unit_price" class="field-input" type="number" inputmode="decimal" min="0.01" max="9999999999.99" step="0.01" placeholder="0.00" :disabled="form.processing || deleteForm.processing" />
-                </label>
-                <label class="flex items-center gap-2 text-xs font-bold">
-                    <input v-model="form.allows_open_quantity" type="checkbox" class="rounded border-tabarak-line" :disabled="form.processing || deleteForm.processing" />
-                    Open quantity
-                </label>
-                <p v-if="form.errors.unit_price" class="text-xs text-red-600">{{ form.errors.unit_price }}</p>
-                <button v-if="canQuickPublish" type="button" class="btn-primary w-full" :disabled="!priceValid || !form.name.trim() || form.processing || deleteForm.processing" @click="publish">
-                    <Send class="size-4" /> {{ form.processing ? 'Publishing…' : 'Publish to shop' }}
-                </button>
-                <p v-if="canQuickPublish" class="text-xs leading-5 text-slate-500">If the detected details are correct, enter the selling price and publish. Use Review to make corrections first.</p>
-            </div>
-
-            <div
-                v-if="canReview || canDelete"
-                class="mt-4 grid gap-2 border-t border-tabarak-line pt-4"
-                :class="canReview && canDelete ? 'grid-cols-2' : 'grid-cols-1'"
-            >
-                <button
-                    v-if="canReview"
-                    type="button"
-                    class="btn-secondary w-full"
-                    :disabled="form.processing || deleteForm.processing"
-                    @click="openReview"
-                >
-                    <Pencil class="size-4" />
-                    Review
-                </button>
-
-                <button
-                    v-if="canDelete"
-                    type="button"
-                    class="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md border border-red-200 bg-white px-4 text-sm font-bold text-red-600 transition hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                    :disabled="deleteForm.processing || form.processing"
-                    @click="confirmingDelete = true"
-                >
-                    <Trash2 class="size-4" />
-                    {{ deleteForm.processing ? 'Deleting…' : 'Delete' }}
-                </button>
-            </div>
-
-
-
-            <Link
-                v-if="item.status === 'approved' && item.approved_product"
-                :href="route('admin.products.edit', item.approved_product.slug)"
-                class="btn-secondary mt-4 w-full"
-            >
-                Edit published product <ExternalLink class="size-4" />
-            </Link>
+        <div v-if="canReview" class="import-price min-w-0 space-y-1">
+            <label class="block">
+                <span class="sr-only">Price in USD for item {{ item.id }}</span>
+                <div class="flex items-center gap-1 rounded-lg border border-tabarak-line bg-white px-2 focus-within:ring-1 focus-within:ring-tabarak-blue">
+                    <span class="text-xs text-slate-500">$</span>
+                    <input v-model="form.unit_price" data-import-price class="min-w-0 w-full border-0 bg-transparent px-0 py-2 text-sm font-semibold focus:ring-0" type="number" inputmode="decimal" min="0.01" max="9999999999.99" step="0.01" placeholder="0.00" :disabled="form.processing || deleteForm.processing || batchBusy" @keydown.enter.prevent="focusNextPrice" />
+                </div>
+            </label>
+            <label class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600">
+                <input v-model="form.allows_open_quantity" type="checkbox" class="rounded border-tabarak-line" :disabled="form.processing || deleteForm.processing || batchBusy" /> Open qty
+            </label>
+            <p v-if="form.errors.unit_price" class="text-xs text-red-600">{{ form.errors.unit_price }}</p>
+        </div>
+        <div v-else class="import-price text-sm font-semibold text-slate-500">
+            {{ item.approved_product?.unit_price != null ? '$' + Number(item.approved_product.unit_price).toFixed(2) : '—' }}
+        </div>
+        <div class="import-actions flex flex-wrap items-center justify-end gap-1.5">
+            <button v-if="canReview" type="button" class="btn-secondary !min-h-9 !px-3 !py-1 text-xs" :disabled="form.processing || deleteForm.processing || batchBusy" @click="openReview"><Pencil class="size-3.5" /> Review</button>
+            <button v-if="canQuickPublish" type="button" class="btn-primary !min-h-9 !px-3 !py-1 text-xs" :disabled="!priceValid || form.processing || deleteForm.processing || batchBusy" @click="publish"><Send class="size-3.5" /> {{ form.processing ? 'Saving…' : 'Publish' }}</button>
+            <button v-if="canDelete" type="button" class="grid size-9 place-items-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50" :disabled="deleteForm.processing || form.processing || batchBusy" :aria-label="'Delete item ' + item.id" title="Delete item" @click="confirmingDelete = true"><Trash2 class="size-4" /></button>
+            <Link v-if="item.status === 'approved' && item.approved_product" :href="route('admin.products.edit', item.approved_product.slug)" class="btn-secondary !min-h-9 !px-3 !py-1 text-xs">Edit <ExternalLink class="size-3.5" /></Link>
         </div>
 
         <Teleport to="body">
             <dialog
-                v-if="canReview"
+                v-if="canReview && reviewMounted"
                 ref="reviewDialog"
                 :aria-labelledby="`import-review-title-${item.id}`"
                 class="review-dialog m-auto w-11/12 max-w-5xl rounded-2xl border border-tabarak-line bg-white p-0 text-left text-tabarak-ink shadow-2xl backdrop:bg-slate-950/55"
                 @cancel.prevent="closeReview"
+                @close="reviewMounted = false"
             >
                 <header class="flex items-start justify-between gap-3 border-b border-tabarak-line px-5 py-4 sm:px-6">
                     <div class="min-w-0">
@@ -434,5 +386,25 @@ const confidenceLabel = (confidence: string | null) => {
         border-bottom: 0;
         border-right: 1px solid #e5e2dc;
     }
+}
+
+.import-row {
+    display: grid;
+    grid-template-columns: 60px minmax(0, 1fr);
+    gap: 8px 12px;
+    align-items: center;
+    padding: 10px 12px;
+}
+.import-thumbnail { width: 60px; height: 64px; }
+.import-price { grid-column: 2; }
+.import-actions { grid-column: 1 / -1; }
+@media (min-width: 768px) {
+    .import-row {
+        grid-template-columns: 64px minmax(0, 1fr) 112px 236px;
+        gap: 14px;
+        padding: 10px 16px;
+    }
+    .import-thumbnail { width: 64px; height: 64px; }
+    .import-price, .import-actions { grid-column: auto; }
 }
 </style>

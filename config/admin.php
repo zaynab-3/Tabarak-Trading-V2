@@ -21,5 +21,5 @@ return [
     | Without it, the login page returns a 404 Not Found as if it doesn't exist.
     |
     */
-    'access_key' => env('ADMIN_ACCESS_KEY', 'tt-2026'),
+    'access_key' => env('ADMIN_ACCESS_KEY', ''),
 ];

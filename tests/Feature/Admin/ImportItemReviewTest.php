@@ -221,7 +221,7 @@ class ImportItemReviewTest extends TestCase
         $url = route('admin.imports.publish.store', $batch);
 
         $bad = $drafts;
-        $bad[1]['unit_price'] = null;
+        $bad[1]['unit_price'] = '-1';
         $this->actingAs($admin)->postJson($url, ['items' => $bad])
             ->assertUnprocessable()->assertJsonValidationErrors('items.1.unit_price');
         $bad = $drafts;
@@ -238,6 +238,73 @@ class ImportItemReviewTest extends TestCase
         $this->assertSame(1, $batch->items()->where('status', ImportItemStatus::Review)->count());
         $this->assertSame(99, $batch->fresh()->approved_items);
         $this->assertSame(ImportItemStatus::Review, $foreign->fresh()->status);
+    }
+
+    public function test_publish_without_prices_and_fill_them_later_in_bulk(): void
+    {
+        Queue::fake();
+        $admin = User::factory()->admin()->create();
+        $response = $this->actingAs($admin)->post(route('admin.imports.store'), [
+            'name' => 'Missing prices',
+            'images' => [UploadedFile::fake()->image('missing-price.jpg')],
+        ], ['Accept' => 'application/json'])->assertCreated();
+        $batch = ImportBatch::query()->findOrFail($response->json('batch_id'));
+        $first = $batch->items()->firstOrFail();
+        $first->update(['status' => ImportItemStatus::Review, 'suggested_name' => 'Product 1']);
+        $drafts = [];
+        for ($i = 1; $i <= 100; $i++) {
+            $item = $i === 1 ? $first : $batch->items()->create([
+                'media_id' => $first->media_id,
+                'status' => ImportItemStatus::Review,
+                'suggested_name' => 'Product '.$i,
+            ]);
+            $drafts[] = [
+                'id' => $item->id,
+                'name' => 'Product '.$i,
+                'unit_price' => null,
+                'allows_open_quantity' => false,
+            ];
+        }
+
+        // The individual and bulk paths both permit missing prices.
+        $single = array_shift($drafts);
+        $this->actingAs($admin)->post(route('admin.imports.items.publish.store', [$batch->id, $single['id']]), $single)
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($admin)->postJson(route('admin.imports.publish.store', $batch), ['items' => $drafts])
+            ->assertRedirect();
+        $this->assertDatabaseCount('products', 100);
+        $this->assertSame(100, \App\Models\Product::query()->whereNull('unit_price')->count());
+
+        $url = route('admin.imports.prices.update', $batch);
+        $items = $batch->items()->orderBy('id')->get();
+        $prices = $items->map(fn ($item, $index) => [
+            'id' => $item->id,
+            'unit_price' => number_format($index + 1.25, 2, '.', ''),
+        ])->all();
+        $otherBatch = ImportBatch::query()->create(['created_by' => $admin->id, 'name' => 'Other batch']);
+        $foreign = $otherBatch->items()->create([
+            'media_id' => $first->media_id,
+            'status' => ImportItemStatus::Review,
+            'suggested_name' => 'Other product',
+        ]);
+        $bad = $prices;
+        $bad[1]['id'] = $foreign->id;
+        $this->actingAs($admin)->patchJson($url, ['items' => $bad])
+            ->assertUnprocessable()->assertJsonValidationErrors('items.1.id');
+        $bad = $prices;
+        $bad[1]['unit_price'] = '0';
+        $this->actingAs($admin)->patchJson($url, ['items' => $bad])
+            ->assertUnprocessable()->assertJsonValidationErrors('items.1.unit_price');
+        $this->assertSame(100, \App\Models\Product::query()->whereNull('unit_price')->count());
+
+        $this->actingAs($admin)->patchJson($url, ['items' => $prices])->assertRedirect();
+        $this->assertDatabaseCount('products', 100);
+        $this->assertDatabaseHas('products', ['name' => 'Product 1', 'unit_price' => 1.25]);
+        $this->assertDatabaseHas('products', ['name' => 'Product 100', 'unit_price' => 100.25]);
+        $this->assertSame(0, \App\Models\Product::query()->whereNull('unit_price')->count());
+        $this->actingAs($admin)->patchJson($url, ['items' => [['id' => $first->id, 'unit_price' => '9.99']]])
+            ->assertUnprocessable()->assertJsonValidationErrors('items.0.id');
+        $this->assertDatabaseHas('products', ['name' => 'Product 1', 'unit_price' => 1.25]);
     }
 
     public function test_unapproved_import_item_can_be_deleted_with_orphaned_media(): void

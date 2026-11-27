@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, LoaderCircle, Search, Send, ShieldCheck } from '@lucide/vue';
 import { computed, reactive, ref } from 'vue';
 import AiAnalyzerStatus from '@/Components/Admin/AiAnalyzerStatus.vue';
@@ -19,7 +19,8 @@ const props = defineProps<{
 
 const drafts = reactive<Record<number, ImportPublishDraft | null>>({});
 const query = ref('');
-const filter = ref<'all' | 'unpublished' | 'priced' | 'published' | 'missing'>(props.batch.items?.some(item => ['pending', 'processing', 'review', 'failed'].includes(item.status)) ? 'unpublished' : props.batch.items?.some(item => item.approved_product?.status === 'published' && item.approved_product.unit_price === null) ? 'missing' : 'published');
+const requestedMissing = new URLSearchParams(usePage().url.split('?')[1] ?? '').get('view') === 'missing';
+const filter = ref<'all' | 'unpublished' | 'priced' | 'published' | 'missing'>(requestedMissing ? 'missing' : props.batch.items?.some(item => ['pending', 'processing', 'review', 'failed'].includes(item.status)) ? 'unpublished' : props.batch.items?.some(item => item.approved_product?.status === 'published' && item.approved_product.unit_price === null) ? 'missing' : 'published');
 const confirming = ref(false);
 const quantityCommand = ref({ value: false, revision: 0 });
 const rowBusy = reactive<Record<number, boolean>>({});

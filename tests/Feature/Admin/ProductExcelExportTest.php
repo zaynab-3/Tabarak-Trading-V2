@@ -98,7 +98,8 @@ class ProductExcelExportTest extends TestCase
     {
         $url = route('admin.products.export', ['scope' => 'all', 'columns' => ['name']]);
         $this->getJson($url)->assertUnauthorized();
-        $this->actingAs(User::factory()->create())->getJson($url)->assertForbidden();
+        // Admin middleware intentionally hides protected routes from non-admins.
+        $this->actingAs(User::factory()->create())->getJson($url)->assertNotFound();
         $this->actingAs(User::factory()->admin()->create())->getJson(route('admin.products.export', [
             'scope' => 'all', 'columns' => ['password'],
         ]))->assertUnprocessable()->assertJsonValidationErrors('columns.0');

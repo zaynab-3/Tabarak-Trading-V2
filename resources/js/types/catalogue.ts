@@ -129,6 +129,7 @@ export interface ImportBatch {
     total_items: number;
     processed_items: number;
     approved_items: number;
+    missing_price_count?: number;
     rejected_items: number;
     created_at: string;
     creator?: { id: number; name: string } | null;

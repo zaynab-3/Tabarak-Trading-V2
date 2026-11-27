@@ -110,7 +110,7 @@ useImportBatchPolling(
             <ImportAnalysisCard v-for="item in items" v-show="isVisible(item)" :key="item.id" :item="item" :categories="categories" :batch-busy="batchForm.processing" @draft="updateDraft" />
             <p v-if="!visibleCount" class="p-8 text-center text-sm text-slate-500">No items match this view.</p>
         </section>
-        <ConfirmDialog :open="confirming" title="Publish priced products?" :description="`Publish ${Math.min(priced.length, 250)} products using their entered prices and current edited details? Unpriced items will remain unpublished. Make sure the selected product details are correct.`" confirm-label="Publish priced items" :processing="batchForm.processing" @cancel="confirming = false" @confirm="publishPriced" />
+        <ConfirmDialog :open="confirming" title="Publish priced products?" :description="`Publish ${Math.min(priced.length, 250)} products using their entered prices and current edited details? Unpriced items will remain unpublished. Make sure the selected product details are correct.`" confirm-label="Publish priced items" tone="warning" :processing="batchForm.processing" @cancel="confirming = false" @confirm="publishPriced" />
     </AdminLayout>
 </template>
 

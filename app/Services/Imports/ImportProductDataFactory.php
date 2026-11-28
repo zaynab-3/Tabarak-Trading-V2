@@ -26,7 +26,9 @@ class ImportProductDataFactory
             ? (filled($overrides['brand']) ? trim((string) $overrides['brand']) : null)
             : $item->suggested_brand;
 
-        $sku = $this->availableSku($metadata['sku'] ?? null);
+        $sku = array_key_exists('sku', $overrides)
+            ? $overrides['sku']
+            : $this->availableSku($metadata['sku'] ?? null);
 
         return ProductData::fromArray([
             'name' => $overrides['name'] ?? $item->suggested_name,
@@ -35,14 +37,15 @@ class ImportProductDataFactory
                 ? (filled($overrides['category_id']) ? (int) $overrides['category_id'] : null)
                 : $this->taxonomy->categoryId($item->suggested_category),
             'sku' => $sku,
-            'short_description' => filled($metadata['description'] ?? null)
-                ? Str::limit(trim((string) $metadata['description']), 500, '')
-                : null,
-            'description' => filled($metadata['detected_text'] ?? null)
-                ? "Visible package text: ".trim((string) $metadata['detected_text'])
-                : null,
-            'weight_value' => $weightValue,
-            'weight_unit' => $weightUnit,
+            'short_description' => array_key_exists('short_description', $overrides)
+                ? $overrides['short_description']
+                : (filled($metadata['description'] ?? null) ? Str::limit(trim((string) $metadata['description']), 500, '') : null),
+            'description' => array_key_exists('description', $overrides)
+                ? $overrides['description']
+                : (filled($metadata['detected_text'] ?? null) ? "Visible package text: ".trim((string) $metadata['detected_text']) : null),
+            'weight_value' => array_key_exists('weight_value', $overrides) ? $overrides['weight_value'] : $weightValue,
+            'weight_unit' => array_key_exists('weight_unit', $overrides) ? $overrides['weight_unit'] : $weightUnit,
+            'unit_price' => $overrides['unit_price'] ?? null,
             'pack_quantity' => $packQuantity,
             'allows_open_quantity' => (bool) ($overrides['allows_open_quantity'] ?? false),
             'unit_label' => $packQuantity ? 'case' : null,

@@ -21,12 +21,12 @@ const publish = () => {
             Open quantity for all
         </label>
         <button class="btn-primary min-h-9 px-3 py-2 text-xs" type="button" :disabled="form.processing" @click="confirming = true">
-            <Send class="size-3.5" /> {{ form.processing ? 'Publishing…' : `Publish all ${count}` }}
+            <Send class="size-3.5" /> {{ form.processing ? 'Publishing…' : `Publish all ${count} without prices` }}
         </button>
         <ConfirmDialog
             :open="confirming"
-            title="Publish analyzed products?"
-            :description="`${count} analyzed product(s) will be added to the public shop using the reviewed details.`"
+            title="Publish analyzed products without prices?"
+            :description="`${count} analyzed product(s) will be added to the public shop using AI suggestions only, without prices. Any prices or corrections entered on individual cards will not be included. To save a price and corrections, publish the item individually.`"
             confirm-label="Publish products"
             tone="warning"
             :processing="form.processing"

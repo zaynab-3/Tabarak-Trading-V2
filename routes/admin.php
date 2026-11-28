@@ -35,6 +35,7 @@ Route::prefix($adminPrefix)->name('admin.')->group(function () {
         Route::post('/logout', [AdminSessionController::class, 'destroy'])->name('logout');
         Route::get('/', DashboardController::class)->name('dashboard');
 
+        Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
         Route::resource('products', ProductController::class)->except(['show']);
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::resource('order-notices', OrderDeletionNoticeController::class)->only(['index', 'show']);
@@ -57,6 +58,7 @@ Route::prefix($adminPrefix)->name('admin.')->group(function () {
         Route::resource('imports', ImportBatchController::class)->parameters(['imports' => 'importBatch'])->only(['index', 'store', 'show']);
         Route::post('/imports/{importBatch}/images', [ImportBatchImageController::class, 'store'])->name('imports.images.store');
         Route::post('/imports/{importBatch}/analysis', [ImportBatchAnalysisController::class, 'store'])->name('imports.analysis.store');
+        Route::patch('/imports/{importBatch}/prices', [ImportBatchPublicationController::class, 'prices'])->name('imports.prices.update');
         Route::post('/imports/{importBatch}/publish', [ImportBatchPublicationController::class, 'store'])->name('imports.publish.store');
         Route::delete('/imports/{importBatch}/items/{importItem}', [ImportItemController::class, 'destroy'])->name('imports.items.destroy');
         Route::post('/imports/{importBatch}/items/{importItem}/publish', [ImportItemPublicationController::class, 'store'])->name('imports.items.publish.store');

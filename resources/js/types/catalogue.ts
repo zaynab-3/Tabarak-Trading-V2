@@ -78,6 +78,21 @@ export interface Brand extends TaxonomyRef {
 export interface PaginationLink { url: string | null; label: string; active: boolean; }
 export interface Paginated<T> { data: T[]; links: PaginationLink[]; current_page: number; last_page: number; from: number | null; to: number | null; total: number; }
 
+export type ImportPublishDraft = {
+    id: number;
+    name: string;
+    brand: string;
+    category_id: string | number;
+    pack_quantity: string | number;
+    sku: string;
+    short_description: string;
+    description: string;
+    weight_value: string | number;
+    weight_unit: string;
+    unit_price: string | number;
+    allows_open_quantity: boolean;
+}
+
 export interface ImportItem {
     id: number;
     import_batch_id: number;
@@ -91,7 +106,7 @@ export interface ImportItem {
     suggested_metadata: Record<string, string | null> | null;
     media: MediaItem;
     approved_product_id: number | null;
-    approved_product?: Pick<Product, 'id' | 'name' | 'slug'> | null;
+    approved_product?: Pick<Product, 'id' | 'name' | 'slug' | 'unit_price' | 'status'> | null;
 }
 
 export interface ProductImageAnalyzerStatus {
@@ -114,6 +129,7 @@ export interface ImportBatch {
     total_items: number;
     processed_items: number;
     approved_items: number;
+    missing_price_count?: number;
     rejected_items: number;
     created_at: string;
     creator?: { id: number; name: string } | null;

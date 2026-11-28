@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Imports\CreateImportBatch;
 use App\Enums\ImportItemStatus;
+use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Imports\StoreImportBatchRequest;
 use App\Models\ImportBatch;
@@ -24,7 +25,12 @@ class ImportBatchController extends Controller
         Gate::authorize('viewAny', ImportBatch::class);
 
         return Inertia::render('Admin/Imports/Index', [
-            'batches' => ImportBatch::query()->with('creator:id,name')->latest()->paginate(15),
+            'batches' => ImportBatch::query()->with('creator:id,name')
+                ->withCount(['items as missing_price_count' => fn ($query) => $query
+                    ->where('status', ImportItemStatus::Approved)
+                    ->whereHas('approvedProduct', fn ($product) => $product
+                        ->where('status', ProductStatus::Published)->whereNull('unit_price'))])
+                ->latest()->paginate(15),
             'importConfig' => $this->importConfig(),
         ]);
     }
@@ -52,7 +58,7 @@ class ImportBatchController extends Controller
     public function show(ImportBatch $importBatch): Response
     {
         Gate::authorize('view', $importBatch);
-        $importBatch->load(['creator:id,name', 'items.media', 'items.approvedProduct:id,name,slug']);
+        $importBatch->load(['creator:id,name', 'items.media', 'items.approvedProduct:id,name,slug,unit_price,status']);
 
         return Inertia::render('Admin/Imports/Show', [
             'batch' => $importBatch,

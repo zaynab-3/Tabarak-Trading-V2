@@ -1,11 +1,14 @@
 <script setup lang="ts">
 defineProps<{ compact?: boolean; inverse?: boolean; storefront?: boolean }>();
+
+// Reuse Laravel's deployment-aware icon URL from the document head.
+const logoUrl = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')?.href;
 </script>
 
 <template>
     <div class="inline-flex items-center gap-2.5" :class="inverse ? 'text-white' : 'text-tabarak-ink'">
         <img
-            src="/icons/apple-touch-icon.png"
+            :src="logoUrl"
             :alt="compact ? 'Tabarak Trading' : ''"
             class="size-9 shrink-0 object-contain sm:size-10"
         />

@@ -51,7 +51,12 @@ defineProps<{ batches: Paginated<ImportBatch>; importConfig: ImportConfiguration
             </thead>
             <tbody class="divide-y divide-tabarak-line">
                 <tr v-for="batch in batches.data" :key="batch.id">
-                    <td class="px-4 py-3 font-bold text-tabarak-ink">{{ batch.name }}</td>
+                    <td class="px-4 py-3 font-bold text-tabarak-ink">
+                        {{ batch.name }}
+                        <Link v-if="batch.missing_price_count" :href="route('admin.imports.show', { importBatch: batch.id, view: 'missing' })" class="mt-1 block text-xs font-semibold text-tabarak-orange">
+                            {{ batch.missing_price_count }} missing price(s) · Add prices
+                        </Link>
+                    </td>
                     <td class="px-4 py-3"><StatusBadge :status="batch.status" /></td>
                     <td class="px-4 py-3 text-slate-500">{{ batch.processed_items }} / {{ batch.total_items }}</td>
                     <td class="hidden px-4 py-3 text-slate-500 lg:table-cell">{{ batch.creator?.name || 'Former admin' }}</td>
